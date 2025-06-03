@@ -160,14 +160,21 @@ class Datacard:
             nominal_hist = f[self.dirname][f"{process}"].to_hist()
             up_hist = f[self.dirname][f"{process}__{nuisance}Up"].to_hist()
             down_hist = f[self.dirname][f"{process}__{nuisance}Down"].to_hist()
-            # Vectorized calculation
-            nominal_vals = nominal_hist.values()
-            up_vals = up_hist.values()
-            down_vals = down_hist.values()
-            # Avoid division by zero
-            with np.errstate(divide='ignore', invalid='ignore'):
-                up_rate = np.nanmean(np.where(nominal_vals != 0, up_vals / nominal_vals, 1.0))
-                down_rate = np.nanmean(np.where(nominal_vals != 0, down_vals / nominal_vals, 1.0))
+
+            # take the integral of the histograms
+            nominal_sum = nominal_hist.sum().value
+            if nominal_sum <= 1e-6:
+                print(f"Warning: Nominal value for process {process} is too small ({nominal_sum}), skipping.")
+            up_rate = up_hist.sum().value / nominal_sum
+            down_rate = down_hist.sum().value / nominal_sum 
+            
+            #nominal_vals = nominal_hist.values()
+            #up_vals = up_hist.values()
+            #down_vals = down_hist.values()
+            ## Avoid division by zero
+            #with np.errstate(divide='ignore', invalid='ignore'):
+                #up_rate = np.nanmean(np.where(nominal_vals != 0, up_vals / nominal_vals, 1.0))
+                #down_rate = np.nanmean(np.where(nominal_vals != 0, down_vals / nominal_vals, 1.0))
             rates[process] = (up_rate, down_rate)
         return rates
 
@@ -192,7 +199,7 @@ class Datacard:
                     rates = self._extract_shape_rates(f, nuisance)
             else:
                 rates = self._extract_shape_rates(shapes_file_handle, nuisance)
-        elif nuisance_type == "?":
+        elif nuisance_type == "shape?":
             raise NotImplementedError(f"Nuisance {nuisance} is a mixed nuisance, not implemented yet.")
         return rates
     
