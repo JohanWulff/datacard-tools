@@ -40,11 +40,10 @@ def replace_nuisance_lines(old_card: Datacard,
             raise ValueError(f"Expected {len(old_card.processes)} entries for nuisance {nuisance}, but got {len(new_entries)}")
         line_index = [l.split()[0] for l in lines].index(nuisance)
         # check if all new entries are empty -> line can be removed
-        if all(entry == "-" for entry in new_entries.values()):
-            # remove the line
-            lines.pop(line_index)
-            continue
-        original_line = lines[line_index]
+        #if all(entry == "-" for entry in new_entries.values()):
+            ## remove the line
+            #lines.pop(line_index)
+            #continue
         new_line = [nuisance, nuisance_type]
         process_entries = ["-" for _ in old_card.all_processes] # ignore processes will get a "-" by default
         for process, entry in new_entries.items():
@@ -110,11 +109,11 @@ def update_datacard(datacard: Datacard,
                 if len(small_shape_effects[nuisance]) == len(datacard.processes):
                     rates = datacard.get_rates(nuisance, shapes_file_handle=f)
                     rates = {process: get_rate_string(*rates[process]) for process in rates}
-                    modifications.append((nuisance, "lnN", rates))
-                    modified_nuisances.add(nuisance)
                     # Check if all entries are "-"
                     if all(rate == "-" for rate in rates.values()):
                         n_removed += 1
+                    modifications.append((nuisance, "lnN", rates))
+                    modified_nuisances.add(nuisance)
                 elif len(small_shape_effects[nuisance]) < len(datacard.processes):
                     rates = datacard.get_rates(nuisance, shapes_file_handle=f)
                     keep_processes =  set(datacard.processes) - set(small_shape_effects[nuisance].keys())
