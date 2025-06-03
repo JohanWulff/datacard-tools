@@ -1,27 +1,14 @@
 import subprocess
 import os
-import shutil
-import sys
-from multiprocessing import Pool, Manager
-import argparse
 
 from pathlib import Path
 import json
 import re
 
 import uproot
-import hist
-from hist import Hist
 import numpy as np
 
 from typing import List, Dict, Tuple
-from collections import defaultdict
-
-from concurrent.futures import ThreadPoolExecutor
-from tqdm import tqdm
-import time
-from ROOT import TFile, gDirectory
-from pprint import pp
 
 from dataclasses import dataclass, field
 
@@ -31,23 +18,19 @@ class Datacard:
     Dataclass to hold information about a datacard.
     """
     datacard: Path
-    replacement_path: Path
-    ignore_processes: List[str] = field(default_factory=lambda: ["data_obs", "QCD"]) 
-    positions: list = field(init=False, default=None)
+    ignore_processes: List = field(default_factory=lambda: ["data_obs", "QCD"]) 
+
     processes: list = field(init=False, default=None)
     all_processes: list = field(init=False, default=None)
     process_to_id: dict = field(init=False, default=None)
     lines: list = field(init=False, default=None)
     nuisance_types: dict = field(init=False, default=None)
+
+    _positions: list = field(init=False, default=None)
     
     def __post_init__(self):
         if not isinstance(self.datacard, Path):
             self.datacard = Path(self.datacard)
-        if not isinstance(self.replacement_path, Path):
-            self.replacement_path = Path(self.replacement_path)
-        if not self.replacement_path.exists():
-            print(f"Replacement path {self.replacement_path} does not exist, creating it.")
-            os.makedirs(self.replacement_path, exist_ok=True)
         if not self.datacard.exists():
             raise FileNotFoundError(f"Datacard {self.datacard} does not exist.")
         self.shapes_file = self.datacard.parent / str(self.datacard.name).replace("datacard", "shapes").replace("txt", "root")
@@ -79,9 +62,10 @@ class Datacard:
         self.process_to_id = {p: i for i, p in zip(process_ids, self.processes) if not any(ignored in p for ignored in self.ignore_processes)}
 
         # get a nuisance line
-        br_line = [l for l in self.lines if l.startswith("BR_hbb")][0]
-        #self.positions = [0, br_line.index("lnN")]
-        #self.positions.extend([self.process_lines[0].index(p) for p in self.all_processes])
+        # nuisance type position is one space after the name of the longest nuisance
+        longest_nuisance = max(self.get_nuisance_types().keys(), key=len)
+        self._positions = [0, len(longest_nuisance) + 2]  # start with the first two positions
+        self._positions.extend([self.process_lines[0].index(p) for p in self.all_processes])
 
 
     @property
@@ -239,127 +223,3 @@ class Datacard:
         except Exception as e:
             print(f"Error running validation for {self.datacard}: {e}")
             return False
-
-
-def replace_nuisance_lines(datacard: Datacard, modifications: list[tuple[str, str, dict[str, str]]]) -> None:
-    """
-    Apply multiple nuisance line replacements in one go.
-    Each modification is a tuple: (nuisance, nuisance_type, new_entries)
-    """
-    with open(datacatd.datacard, "r") as f:
-        lines = f.readlines()
-
-    for nuisance, nuisance_type, new_entries in modifications:
-        nuisance_lines = [i for i, l in enumerate(lines) if l.startswith(nuisance+" ")]
-        if len(nuisance_lines) == 0:
-            raise ValueError(f"Nuisance {nuisance} not found in datacard {datacard.datacard}")
-        elif len(nuisance_lines) > 1:
-            raise ValueError(f"Found multiple lines for nuisance {nuisance} in datacard {datacard.datacard}")
-        processes = self.get_processes()
-        if len(new_entries) != len(processes):
-            raise ValueError(f"Expected {len(processes)} entries for nuisance {nuisance}, but got {len(new_entries)}")
-        line_index = [l.split()[0] for l in lines].index(nuisance)
-        # check if all new entries are empty -> line can be removed
-        if all(entry == "-" for entry in new_entries.values()):
-            # remove the line
-            lines.pop(line_index)
-            continue
-        original_line = lines[line_index]
-        new_line = [nuisance, nuisance_type]
-        process_entries = ["-" for _ in self._all_processes] # ignore processes will get a "-" by default
-        for process, entry in new_entries.items():
-            if process not in processes:
-                raise ValueError(f"Process {process} not found in datacard {self.datacard}")
-            process_entries[processes.index(process)] = entry
-        new_line.extend(process_entries)
-        spaces = [self.positions[i+1] - (self.positions[i]+len(new_line[i])) for i in range(len(new_line)-1)]
-        new_line = "".join([f"{new_line[i]}{' ' * spaces[i]}" for i in range(len(new_line)-1)]) + f"{new_line[-1]}\n"
-        lines[line_index] = new_line
-    new_datacard_path = self.replacement_path / self.datacard.name
-    with open(new_datacard_path, "w") as f:
-        f.writelines(lines)
-
-
-def update_datacard(datacard: Datacard,
-                    validation_results_dir: str) -> dict:
-    """
-    Update the datacard with non-genuine shape nuisances modelled as rate nuisances.
-    """
-    def get_rate_string(up_rate, down_rate):
-        if np.abs(1-up_rate) < 0.01 and np.abs(1-down_rate) < 0.01:
-            return "-"
-        elif np.abs(1-up_rate) > 0.01 and np.abs(1-down_rate) > 0.01:
-            return f"{np.min((up_rate, down_rate)):.3f}/{np.max((up_rate, down_rate)):.3f}"
-        else:
-            rate = np.max((down_rate, up_rate))
-            return f"{rate:.3f}"
-
-    with uproot.open(datacard.shapes_file) as f:
-        shapes_keys = f.keys()
-        validation_results = datacard.validate(validation_results_dir)
-        if not validation_results:
-            print(f"Validation failed for {datacard.datacard}, skipping update.")
-            return {} 
-
-        with open(validation_results, "r") as vf:
-            validation_results_json = json.load(vf)
-
-        if not "smallShapeEff" in validation_results_json:
-            print(f"No smallShapeEffect warnings found in validation results for {datacard.datacard}")
-            return False
-        else:
-            small_shape_effects = validation_results_json["smallShapeEff"]
-            cat_name = next(iter(small_shape_effects[next(iter(small_shape_effects))]))
-            # de-nest the smallShapeEff dictionary
-            small_shape_effects = {nuisance: small_shape_effects[nuisance][cat_name] for nuisance in small_shape_effects}
-
-            processes = datacard.get_processes()
-            modifications = []  # Collect all modifications here
-
-            for nuisance in small_shape_effects:
-                if len(small_shape_effects[nuisance]) == len(processes):
-                    # can be remodelled as a rate nuisance
-                    rates = datacard.get_rates(nuisance, shapes_file_handle=f)
-                    rates = {process: get_rate_string(*rates[process]) for process in rates}
-                    modifications.append((nuisance, "lnN", rates))
-                    n_updated_rate += 1
-                elif len(small_shape_effects[nuisance]) < len(processes):
-                    rates = datacard.get_rates(nuisance, shapes_file_handle=f)
-                    keep_processes =  set(processes) - set(small_shape_effects[nuisance].keys())
-                    rates = {process: get_rate_string(*rates[process]) for process in small_shape_effects[nuisance].keys()}
-                    if all(rate == "-" for rate in rates.values()):
-                        nuisance_type = "shape"
-                    else:
-                        nuisance_type = "shape?"
-                        continue
-                    rates.update({process: "1" for process in keep_processes})
-                    modifications.append((nuisance, nuisance_type, rates))
-                    n_updated_mixed += 1
-                else:
-                    raise ValueError(f"Unexpected number of processes for nuisance {nuisance} in datacard {datacard.datacard.name}")
-            print(f"updated {n_updated_rate} rate nuisances and {n_updated_mixed} mixed nuisances.")
-
-            # Apply all modifications at once
-            if modifications:
-                datacard.replace_nuisance_lines(modifications)
-
-            output_shapes_file = self.replacement_path / self.shapes_file.name
-            shutil.copy(self.shapes_file, output_shapes_file)
-        return True
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Parse and validate datacards.")
-    parser.add_argument("datacard", type=str, help="Path to the datacard file.")
-    parser.add_argument("replacement_path", type=str, help="Path to the directory where replacements will be stored.")
-    parser.add_argument("--validation_results_dir", type=str,
-                        default="/tmp/jwulff/inference/validation_results/", help="Directory to store validation results.")
-    parser.add_argument("--ignore_processes", nargs='*', default=["data_obs", "QCD"], help="Processes to ignore in the datacard.")
-    args = parser.parse_args()
-
-    datacard = Datacard(Path(args.datacard), Path(args.replacement_path), args.ignore_processes)
-    updated = update_datacard(datacard, validation_results_dir="validation_results")
-
-
-if __name__ == "__main__":
-    main() 

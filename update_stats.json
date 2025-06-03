@@ -1,0 +1,650 @@
+{
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_etau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 17,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 50
+    },
+    "untouched": {
+      "shape": 9,
+      "lnN": 17
+    },
+    "n_modified": 60,
+    "n_untouched": 26,
+    "n_shapeq": 8,
+    "n_removed": 18
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_etau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 43
+    },
+    "untouched": {
+      "lnN": 18,
+      "shape": 5
+    },
+    "n_modified": 64,
+    "n_untouched": 23,
+    "n_shapeq": 0,
+    "n_removed": 26
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_etau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 17,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 17,
+      "shape": 36
+    },
+    "untouched": {
+      "lnN": 17,
+      "shape": 3
+    },
+    "n_modified": 66,
+    "n_untouched": 20,
+    "n_shapeq": 0,
+    "n_removed": 33
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_mutau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 35
+    },
+    "untouched": {
+      "shape": 4,
+      "lnN": 18
+    },
+    "n_modified": 63,
+    "n_untouched": 22,
+    "n_shapeq": 4,
+    "n_removed": 32
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_mutau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 28
+    },
+    "untouched": {
+      "lnN": 19,
+      "shape": 3
+    },
+    "n_modified": 64,
+    "n_untouched": 22,
+    "n_shapeq": 0,
+    "n_removed": 39
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_mutau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 29
+    },
+    "untouched": {
+      "lnN": 19,
+      "shape": 3
+    },
+    "n_modified": 64,
+    "n_untouched": 22,
+    "n_shapeq": 0,
+    "n_removed": 38
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_tautau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 47
+    },
+    "untouched": {
+      "shape": 8,
+      "lnN": 18
+    },
+    "n_modified": 56,
+    "n_untouched": 26,
+    "n_shapeq": 8,
+    "n_removed": 17
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_tautau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 43
+    },
+    "untouched": {
+      "shape": 14,
+      "lnN": 18
+    },
+    "n_modified": 50,
+    "n_untouched": 32,
+    "n_shapeq": 10,
+    "n_removed": 21
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_tautau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 44
+    },
+    "untouched": {
+      "lnN": 18,
+      "shape": 9
+    },
+    "n_modified": 55,
+    "n_untouched": 27,
+    "n_shapeq": 9,
+    "n_removed": 20
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_etau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 17,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 17,
+      "shape": 46
+    },
+    "untouched": {
+      "lnN": 17,
+      "shape": 9
+    },
+    "n_modified": 60,
+    "n_untouched": 26,
+    "n_shapeq": 8,
+    "n_removed": 23
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_etau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 36
+    },
+    "untouched": {
+      "lnN": 18,
+      "shape": 4
+    },
+    "n_modified": 65,
+    "n_untouched": 22,
+    "n_shapeq": 0,
+    "n_removed": 33
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_etau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 17,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 17,
+      "shape": 37
+    },
+    "untouched": {
+      "lnN": 17,
+      "shape": 4
+    },
+    "n_modified": 65,
+    "n_untouched": 21,
+    "n_shapeq": 0,
+    "n_removed": 32
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_mutau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 43
+    },
+    "untouched": {
+      "shape": 4,
+      "lnN": 18
+    },
+    "n_modified": 63,
+    "n_untouched": 22,
+    "n_shapeq": 4,
+    "n_removed": 24
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_mutau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 30
+    },
+    "untouched": {
+      "lnN": 19,
+      "shape": 4
+    },
+    "n_modified": 63,
+    "n_untouched": 23,
+    "n_shapeq": 0,
+    "n_removed": 37
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_mutau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 29
+    },
+    "untouched": {
+      "lnN": 19,
+      "shape": 4
+    },
+    "n_modified": 63,
+    "n_untouched": 23,
+    "n_shapeq": 0,
+    "n_removed": 38
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_tautau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 17,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 48
+    },
+    "untouched": {
+      "lnN": 17,
+      "shape": 9
+    },
+    "n_modified": 55,
+    "n_untouched": 26,
+    "n_shapeq": 9,
+    "n_removed": 15
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_tautau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 47
+    },
+    "untouched": {
+      "shape": 9,
+      "lnN": 18
+    },
+    "n_modified": 55,
+    "n_untouched": 27,
+    "n_shapeq": 6,
+    "n_removed": 17
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_tautau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 47
+    },
+    "untouched": {
+      "shape": 18,
+      "lnN": 18
+    },
+    "n_modified": 46,
+    "n_untouched": 36,
+    "n_shapeq": 18,
+    "n_removed": 17
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_etau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 37
+    },
+    "untouched": {
+      "shape": 5,
+      "lnN": 19
+    },
+    "n_modified": 64,
+    "n_untouched": 24,
+    "n_shapeq": 5,
+    "n_removed": 32
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_etau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 37
+    },
+    "untouched": {
+      "lnN": 19,
+      "shape": 3
+    },
+    "n_modified": 66,
+    "n_untouched": 22,
+    "n_shapeq": 0,
+    "n_removed": 32
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_etau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 37
+    },
+    "untouched": {
+      "lnN": 18,
+      "shape": 3
+    },
+    "n_modified": 66,
+    "n_untouched": 21,
+    "n_shapeq": 0,
+    "n_removed": 32
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_mutau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 20,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 20,
+      "shape": 32
+    },
+    "untouched": {
+      "lnN": 20,
+      "shape": 2
+    },
+    "n_modified": 65,
+    "n_untouched": 22,
+    "n_shapeq": 2,
+    "n_removed": 35
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_mutau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 20,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 20,
+      "shape": 29
+    },
+    "untouched": {
+      "lnN": 20,
+      "shape": 3
+    },
+    "n_modified": 64,
+    "n_untouched": 23,
+    "n_shapeq": 0,
+    "n_removed": 38
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_mutau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 20,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 20,
+      "shape": 28
+    },
+    "untouched": {
+      "lnN": 20,
+      "shape": 4
+    },
+    "n_modified": 63,
+    "n_untouched": 24,
+    "n_shapeq": 0,
+    "n_removed": 39
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_tautau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 42
+    },
+    "untouched": {
+      "shape": 8,
+      "lnN": 18
+    },
+    "n_modified": 56,
+    "n_untouched": 26,
+    "n_shapeq": 8,
+    "n_removed": 22
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_tautau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 37
+    },
+    "untouched": {
+      "shape": 6,
+      "lnN": 19
+    },
+    "n_modified": 58,
+    "n_untouched": 25,
+    "n_shapeq": 2,
+    "n_removed": 27
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_tautau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 36
+    },
+    "untouched": {
+      "shape": 13,
+      "lnN": 19
+    },
+    "n_modified": 51,
+    "n_untouched": 32,
+    "n_shapeq": 13,
+    "n_removed": 28
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_etau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 18,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 18,
+      "shape": 38
+    },
+    "untouched": {
+      "shape": 7,
+      "lnN": 18
+    },
+    "n_modified": 62,
+    "n_untouched": 25,
+    "n_shapeq": 7,
+    "n_removed": 31
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_etau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 29
+    },
+    "untouched": {
+      "lnN": 19,
+      "shape": 3
+    },
+    "n_modified": 66,
+    "n_untouched": 22,
+    "n_shapeq": 0,
+    "n_removed": 40
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_etau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 20,
+      "shape": 69
+    },
+    "after": {
+      "lnN": 20,
+      "shape": 33
+    },
+    "untouched": {
+      "lnN": 20,
+      "shape": 3
+    },
+    "n_modified": 66,
+    "n_untouched": 23,
+    "n_shapeq": 0,
+    "n_removed": 36
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_mutau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 31
+    },
+    "untouched": {
+      "lnN": 19,
+      "shape": 1
+    },
+    "n_modified": 66,
+    "n_untouched": 20,
+    "n_shapeq": 0,
+    "n_removed": 36
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_mutau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 20,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 20,
+      "shape": 26
+    },
+    "untouched": {
+      "lnN": 20,
+      "shape": 3
+    },
+    "n_modified": 64,
+    "n_untouched": 23,
+    "n_shapeq": 0,
+    "n_removed": 41
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_mutau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 20,
+      "shape": 67
+    },
+    "after": {
+      "lnN": 20,
+      "shape": 23
+    },
+    "untouched": {
+      "lnN": 20,
+      "shape": 3
+    },
+    "n_modified": 64,
+    "n_untouched": 23,
+    "n_shapeq": 0,
+    "n_removed": 44
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_tautau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 43
+    },
+    "untouched": {
+      "shape": 6,
+      "lnN": 19
+    },
+    "n_modified": 58,
+    "n_untouched": 25,
+    "n_shapeq": 6,
+    "n_removed": 21
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_tautau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 28
+    },
+    "untouched": {
+      "shape": 8,
+      "lnN": 19
+    },
+    "n_modified": 56,
+    "n_untouched": 27,
+    "n_shapeq": 3,
+    "n_removed": 36
+  },
+  "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_tautau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
+    "before": {
+      "lnN": 19,
+      "shape": 64
+    },
+    "after": {
+      "lnN": 19,
+      "shape": 33
+    },
+    "untouched": {
+      "lnN": 19,
+      "shape": 5
+    },
+    "n_modified": 59,
+    "n_untouched": 24,
+    "n_shapeq": 5,
+    "n_removed": 31
+  }
+}
