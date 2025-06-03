@@ -1,5 +1,7 @@
 # ignore any subdirectories
-**/
-
+**/*
+*.pyc
+__pycache__/*
 *.txt 
 *.root
+*.json
