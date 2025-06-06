@@ -6,6 +6,7 @@ import json
 import re
 
 import uproot
+from hist import Hist
 import numpy as np
 
 from typing import List, Dict, Tuple
@@ -230,3 +231,89 @@ class Datacard:
         except Exception as e:
             print(f"Error running validation for {self.datacard}: {e}")
             return False
+
+
+    def get_shape_var(self, nuisance, shapes_file_handle=None) -> float:
+        """
+        Get the max variation of a shape vs the nominal shape for a given nuisance.
+        """
+        if nuisance not in self.get_nuisance_types():
+            raise ValueError(f"Nuisance {nuisance} not found in datacard {self.datacard}")
+        nuisance_type = self.get_nuisance_types()[nuisance]
+        if nuisance_type != "shape":
+            raise ValueError(f"Nuisance {nuisance} is not a shape nuisance in datacard {self.datacard}")
+        
+        # Use the provided file handle, or open if not provided
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                nominal_hist = f[self.dirname][f"{self.processes[0]}"].to_hist()
+                up_hist = f[self.dirname][f"{self.processes[0]}__{nuisance}Up"].to_hist()
+                down_hist = f[self.dirname][f"{self.processes[0]}__{nuisance}Down"].to_hist()
+        else:
+            nominal_hist = shapes_file_handle[self.dirname][f"{self.processes[0]}"].to_hist()
+            up_hist = shapes_file_handle[self.dirname][f"{self.processes[0]}__{nuisance}Up"].to_hist()
+            down_hist = shapes_file_handle[self.dirname][f"{self.processes[0]}__{nuisance}Down"].to_hist()
+
+        # Calculate the max variation
+        nominal_vals = nominal_hist.values()
+        up_vals = up_hist.values()
+        down_vals = down_hist.values()
+
+        # get the largest relative variation
+        up_var = np.nanmax(np.where(nominal_vals != 0, np.abs(up_vals - nominal_vals) / nominal_vals, 0))
+        down_var = np.nanmax(np.where(nominal_vals != 0, np.abs(down_vals - nominal_vals) / nominal_vals, 0))
+        return max(up_var, down_var)
+    
+
+    def _get_sum_shape_var(self, nuisance, process, shapes_file_handle) -> tuple[float, float]:
+        """
+        Get the sum of the differences between the nominal shape and the up/down variations
+        (the same way as validateDatacards.py does).
+        Returns a tuple of (up_sum, down_sum).
+        """
+        nominal_hist = shapes_file_handle[f"{self.dirname}/{process}"].to_hist()
+        up_hist = shapes_file_handle[f"{self.dirname}/{process}__{nuisance}Up"].to_hist()
+        down_hist = shapes_file_handle[f"{self.dirname}/{process}__{nuisance}Down"].to_hist()
+
+        # Calculate the sum of the differences
+        nominal_vals = nominal_hist.values()/nominal_hist.sum().value
+        up_vals = up_hist.values()/up_hist.sum().value
+        down_vals = down_hist.values()/down_hist.sum().value
+    
+        val_up = np.sum((2*np.abs(up_vals-nominal_vals))/(np.abs(nominal_vals)+np.abs(up_vals)))
+        val_down = np.sum((2*np.abs(down_vals-nominal_vals))/(np.abs(nominal_vals)+np.abs(down_vals)))
+        return val_up, val_down
+    
+    
+    def get_shape_vars(self, nuisance: str, threshold: float, shapes_file_handle=None) -> list[str]:
+        """
+        Get the shape variations for a nuisance.
+        Returns a dictionary with process names as keys and a tuple of (up_var, down_var) as values.
+        Optionally, pass an open shapes_file_handle to avoid reopening.
+        """
+        nuisance_type = self.get_nuisance_types()[nuisance]
+        if nuisance_type != "shape":
+            raise ValueError(f"Nuisance {nuisance} is not a shape nuisance in datacard {self.datacard}")
+        
+        # Use the provided file handle, or open if not provided
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                # just flag processes for which the sum up and sum down is below the threshold
+                vars = {process: self._get_sum_shape_var(nuisance, process, f) for process in self.processes}
+                return [process for process, (up_var, down_var) in vars.items() if up_var < threshold and down_var < threshold]
+                
+        else:
+            vars = {process: self._get_sum_shape_var(nuisance, process, shapes_file_handle) for process in self.processes}
+            return [process for process, (up_var, down_var) in vars.items() if up_var < threshold and down_var < threshold]
+
+    
+    def get_shape_hists(self, keys: list[str], shapes_file_handle=None) -> Dict[str, Hist]: 
+        """
+        Get the shape histograms for a list of nuisances.
+        Returns a dictionary with nuisance names as keys and a dictionary of process histograms as values.
+        """
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                return {key: f[key].to_hist() for key in keys}
+        else:
+            return {key: shapes_file_handle[key].to_hist() for key in keys}

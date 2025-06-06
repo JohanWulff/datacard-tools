@@ -5,16 +5,16 @@
       "shape": 69
     },
     "after": {
-      "lnN": 18,
+      "lnN": 36,
       "shape": 50
     },
     "untouched": {
-      "shape": 9,
-      "lnN": 17
+      "lnN": 17,
+      "shape": 50
     },
-    "n_modified": 60,
-    "n_untouched": 26,
-    "n_shapeq": 8,
+    "n_modified": 19,
+    "n_untouched": 67,
+    "n_shapeq": 0,
     "n_removed": 18
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_etau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -23,15 +23,15 @@
       "shape": 69
     },
     "after": {
-      "lnN": 18,
+      "lnN": 44,
       "shape": 43
     },
     "untouched": {
       "lnN": 18,
-      "shape": 5
+      "shape": 43
     },
-    "n_modified": 64,
-    "n_untouched": 23,
+    "n_modified": 26,
+    "n_untouched": 61,
     "n_shapeq": 0,
     "n_removed": 26
   },
@@ -41,15 +41,15 @@
       "shape": 69
     },
     "after": {
-      "lnN": 17,
+      "lnN": 50,
       "shape": 36
     },
     "untouched": {
       "lnN": 17,
-      "shape": 3
+      "shape": 36
     },
-    "n_modified": 66,
-    "n_untouched": 20,
+    "n_modified": 33,
+    "n_untouched": 53,
     "n_shapeq": 0,
     "n_removed": 33
   },
@@ -59,16 +59,16 @@
       "shape": 67
     },
     "after": {
-      "lnN": 18,
+      "lnN": 50,
       "shape": 35
     },
     "untouched": {
-      "shape": 4,
-      "lnN": 18
+      "lnN": 18,
+      "shape": 35
     },
-    "n_modified": 63,
-    "n_untouched": 22,
-    "n_shapeq": 4,
+    "n_modified": 32,
+    "n_untouched": 53,
+    "n_shapeq": 0,
     "n_removed": 32
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_mutau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -77,15 +77,15 @@
       "shape": 67
     },
     "after": {
-      "lnN": 19,
+      "lnN": 58,
       "shape": 28
     },
     "untouched": {
       "lnN": 19,
-      "shape": 3
+      "shape": 28
     },
-    "n_modified": 64,
-    "n_untouched": 22,
+    "n_modified": 39,
+    "n_untouched": 47,
     "n_shapeq": 0,
     "n_removed": 39
   },
@@ -95,15 +95,15 @@
       "shape": 67
     },
     "after": {
-      "lnN": 19,
+      "lnN": 57,
       "shape": 29
     },
     "untouched": {
       "lnN": 19,
-      "shape": 3
+      "shape": 29
     },
-    "n_modified": 64,
-    "n_untouched": 22,
+    "n_modified": 38,
+    "n_untouched": 48,
     "n_shapeq": 0,
     "n_removed": 38
   },
@@ -113,16 +113,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 18,
+      "lnN": 35,
       "shape": 47
     },
     "untouched": {
-      "shape": 8,
-      "lnN": 18
+      "lnN": 18,
+      "shape": 47
     },
-    "n_modified": 56,
-    "n_untouched": 26,
-    "n_shapeq": 8,
+    "n_modified": 17,
+    "n_untouched": 65,
+    "n_shapeq": 0,
     "n_removed": 17
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_tautau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -131,16 +131,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 18,
+      "lnN": 39,
       "shape": 43
     },
     "untouched": {
-      "shape": 14,
-      "lnN": 18
+      "lnN": 18,
+      "shape": 43
     },
-    "n_modified": 50,
-    "n_untouched": 32,
-    "n_shapeq": 10,
+    "n_modified": 21,
+    "n_untouched": 61,
+    "n_shapeq": 0,
     "n_removed": 21
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016APV_tautau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
@@ -149,16 +149,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 18,
+      "lnN": 38,
       "shape": 44
     },
     "untouched": {
       "lnN": 18,
-      "shape": 9
+      "shape": 44
     },
-    "n_modified": 55,
-    "n_untouched": 27,
-    "n_shapeq": 9,
+    "n_modified": 20,
+    "n_untouched": 62,
+    "n_shapeq": 0,
     "n_removed": 20
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_etau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
@@ -167,16 +167,16 @@
       "shape": 69
     },
     "after": {
-      "lnN": 17,
+      "lnN": 40,
       "shape": 46
     },
     "untouched": {
       "lnN": 17,
-      "shape": 9
+      "shape": 46
     },
-    "n_modified": 60,
-    "n_untouched": 26,
-    "n_shapeq": 8,
+    "n_modified": 23,
+    "n_untouched": 63,
+    "n_shapeq": 0,
     "n_removed": 23
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_etau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -185,15 +185,15 @@
       "shape": 69
     },
     "after": {
-      "lnN": 18,
+      "lnN": 51,
       "shape": 36
     },
     "untouched": {
       "lnN": 18,
-      "shape": 4
+      "shape": 36
     },
-    "n_modified": 65,
-    "n_untouched": 22,
+    "n_modified": 33,
+    "n_untouched": 54,
     "n_shapeq": 0,
     "n_removed": 33
   },
@@ -203,15 +203,15 @@
       "shape": 69
     },
     "after": {
-      "lnN": 17,
+      "lnN": 49,
       "shape": 37
     },
     "untouched": {
       "lnN": 17,
-      "shape": 4
+      "shape": 37
     },
-    "n_modified": 65,
-    "n_untouched": 21,
+    "n_modified": 32,
+    "n_untouched": 54,
     "n_shapeq": 0,
     "n_removed": 32
   },
@@ -221,16 +221,16 @@
       "shape": 67
     },
     "after": {
-      "lnN": 18,
+      "lnN": 42,
       "shape": 43
     },
     "untouched": {
-      "shape": 4,
-      "lnN": 18
+      "lnN": 18,
+      "shape": 43
     },
-    "n_modified": 63,
-    "n_untouched": 22,
-    "n_shapeq": 4,
+    "n_modified": 24,
+    "n_untouched": 61,
+    "n_shapeq": 0,
     "n_removed": 24
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_mutau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -239,15 +239,15 @@
       "shape": 67
     },
     "after": {
-      "lnN": 19,
+      "lnN": 56,
       "shape": 30
     },
     "untouched": {
       "lnN": 19,
-      "shape": 4
+      "shape": 30
     },
-    "n_modified": 63,
-    "n_untouched": 23,
+    "n_modified": 37,
+    "n_untouched": 49,
     "n_shapeq": 0,
     "n_removed": 37
   },
@@ -257,15 +257,15 @@
       "shape": 67
     },
     "after": {
-      "lnN": 19,
+      "lnN": 57,
       "shape": 29
     },
     "untouched": {
       "lnN": 19,
-      "shape": 4
+      "shape": 29
     },
-    "n_modified": 63,
-    "n_untouched": 23,
+    "n_modified": 38,
+    "n_untouched": 48,
     "n_shapeq": 0,
     "n_removed": 38
   },
@@ -275,16 +275,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 18,
+      "lnN": 33,
       "shape": 48
     },
     "untouched": {
       "lnN": 17,
-      "shape": 9
+      "shape": 48
     },
-    "n_modified": 55,
-    "n_untouched": 26,
-    "n_shapeq": 9,
+    "n_modified": 16,
+    "n_untouched": 65,
+    "n_shapeq": 0,
     "n_removed": 15
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_tautau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -293,16 +293,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 18,
+      "lnN": 35,
       "shape": 47
     },
     "untouched": {
-      "shape": 9,
-      "lnN": 18
+      "lnN": 18,
+      "shape": 47
     },
-    "n_modified": 55,
-    "n_untouched": 27,
-    "n_shapeq": 6,
+    "n_modified": 17,
+    "n_untouched": 65,
+    "n_shapeq": 0,
     "n_removed": 17
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2016_tautau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
@@ -311,16 +311,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 18,
+      "lnN": 35,
       "shape": 47
     },
     "untouched": {
-      "shape": 18,
-      "lnN": 18
+      "lnN": 18,
+      "shape": 47
     },
-    "n_modified": 46,
-    "n_untouched": 36,
-    "n_shapeq": 18,
+    "n_modified": 17,
+    "n_untouched": 65,
+    "n_shapeq": 0,
     "n_removed": 17
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_etau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
@@ -329,16 +329,16 @@
       "shape": 69
     },
     "after": {
-      "lnN": 19,
+      "lnN": 51,
       "shape": 37
     },
     "untouched": {
-      "shape": 5,
-      "lnN": 19
+      "lnN": 19,
+      "shape": 37
     },
-    "n_modified": 64,
-    "n_untouched": 24,
-    "n_shapeq": 5,
+    "n_modified": 32,
+    "n_untouched": 56,
+    "n_shapeq": 0,
     "n_removed": 32
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_etau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -347,15 +347,15 @@
       "shape": 69
     },
     "after": {
-      "lnN": 19,
+      "lnN": 51,
       "shape": 37
     },
     "untouched": {
       "lnN": 19,
-      "shape": 3
+      "shape": 37
     },
-    "n_modified": 66,
-    "n_untouched": 22,
+    "n_modified": 32,
+    "n_untouched": 56,
     "n_shapeq": 0,
     "n_removed": 32
   },
@@ -365,15 +365,15 @@
       "shape": 69
     },
     "after": {
-      "lnN": 18,
+      "lnN": 50,
       "shape": 37
     },
     "untouched": {
       "lnN": 18,
-      "shape": 3
+      "shape": 37
     },
-    "n_modified": 66,
-    "n_untouched": 21,
+    "n_modified": 32,
+    "n_untouched": 55,
     "n_shapeq": 0,
     "n_removed": 32
   },
@@ -383,16 +383,16 @@
       "shape": 67
     },
     "after": {
-      "lnN": 20,
+      "lnN": 55,
       "shape": 32
     },
     "untouched": {
       "lnN": 20,
-      "shape": 2
+      "shape": 32
     },
-    "n_modified": 65,
-    "n_untouched": 22,
-    "n_shapeq": 2,
+    "n_modified": 35,
+    "n_untouched": 52,
+    "n_shapeq": 0,
     "n_removed": 35
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_mutau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -401,15 +401,15 @@
       "shape": 67
     },
     "after": {
-      "lnN": 20,
+      "lnN": 58,
       "shape": 29
     },
     "untouched": {
       "lnN": 20,
-      "shape": 3
+      "shape": 29
     },
-    "n_modified": 64,
-    "n_untouched": 23,
+    "n_modified": 38,
+    "n_untouched": 49,
     "n_shapeq": 0,
     "n_removed": 38
   },
@@ -419,15 +419,15 @@
       "shape": 67
     },
     "after": {
-      "lnN": 20,
+      "lnN": 59,
       "shape": 28
     },
     "untouched": {
       "lnN": 20,
-      "shape": 4
+      "shape": 28
     },
-    "n_modified": 63,
-    "n_untouched": 24,
+    "n_modified": 39,
+    "n_untouched": 48,
     "n_shapeq": 0,
     "n_removed": 39
   },
@@ -437,16 +437,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 18,
+      "lnN": 40,
       "shape": 42
     },
     "untouched": {
-      "shape": 8,
-      "lnN": 18
+      "lnN": 18,
+      "shape": 42
     },
-    "n_modified": 56,
-    "n_untouched": 26,
-    "n_shapeq": 8,
+    "n_modified": 22,
+    "n_untouched": 60,
+    "n_shapeq": 0,
     "n_removed": 22
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_tautau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -455,16 +455,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 19,
+      "lnN": 46,
       "shape": 37
     },
     "untouched": {
-      "shape": 6,
-      "lnN": 19
+      "lnN": 19,
+      "shape": 37
     },
-    "n_modified": 58,
-    "n_untouched": 25,
-    "n_shapeq": 2,
+    "n_modified": 27,
+    "n_untouched": 56,
+    "n_shapeq": 0,
     "n_removed": 27
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2017_tautau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
@@ -473,16 +473,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 19,
+      "lnN": 47,
       "shape": 36
     },
     "untouched": {
-      "shape": 13,
-      "lnN": 19
+      "lnN": 19,
+      "shape": 36
     },
-    "n_modified": 51,
-    "n_untouched": 32,
-    "n_shapeq": 13,
+    "n_modified": 28,
+    "n_untouched": 55,
+    "n_shapeq": 0,
     "n_removed": 28
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_etau_boosted_notres2b_os_iso_spin_0_mass_700.txt": {
@@ -491,16 +491,16 @@
       "shape": 69
     },
     "after": {
-      "lnN": 18,
+      "lnN": 49,
       "shape": 38
     },
     "untouched": {
-      "shape": 7,
-      "lnN": 18
+      "lnN": 18,
+      "shape": 38
     },
-    "n_modified": 62,
-    "n_untouched": 25,
-    "n_shapeq": 7,
+    "n_modified": 31,
+    "n_untouched": 56,
+    "n_shapeq": 0,
     "n_removed": 31
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_etau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -509,15 +509,15 @@
       "shape": 69
     },
     "after": {
-      "lnN": 19,
+      "lnN": 59,
       "shape": 29
     },
     "untouched": {
       "lnN": 19,
-      "shape": 3
+      "shape": 29
     },
-    "n_modified": 66,
-    "n_untouched": 22,
+    "n_modified": 40,
+    "n_untouched": 48,
     "n_shapeq": 0,
     "n_removed": 40
   },
@@ -527,15 +527,15 @@
       "shape": 69
     },
     "after": {
-      "lnN": 20,
+      "lnN": 56,
       "shape": 33
     },
     "untouched": {
       "lnN": 20,
-      "shape": 3
+      "shape": 33
     },
-    "n_modified": 66,
-    "n_untouched": 23,
+    "n_modified": 36,
+    "n_untouched": 53,
     "n_shapeq": 0,
     "n_removed": 36
   },
@@ -545,15 +545,15 @@
       "shape": 67
     },
     "after": {
-      "lnN": 19,
+      "lnN": 55,
       "shape": 31
     },
     "untouched": {
       "lnN": 19,
-      "shape": 1
+      "shape": 31
     },
-    "n_modified": 66,
-    "n_untouched": 20,
+    "n_modified": 36,
+    "n_untouched": 50,
     "n_shapeq": 0,
     "n_removed": 36
   },
@@ -563,15 +563,15 @@
       "shape": 67
     },
     "after": {
-      "lnN": 20,
+      "lnN": 61,
       "shape": 26
     },
     "untouched": {
       "lnN": 20,
-      "shape": 3
+      "shape": 26
     },
-    "n_modified": 64,
-    "n_untouched": 23,
+    "n_modified": 41,
+    "n_untouched": 46,
     "n_shapeq": 0,
     "n_removed": 41
   },
@@ -581,15 +581,15 @@
       "shape": 67
     },
     "after": {
-      "lnN": 20,
+      "lnN": 64,
       "shape": 23
     },
     "untouched": {
       "lnN": 20,
-      "shape": 3
+      "shape": 23
     },
-    "n_modified": 64,
-    "n_untouched": 23,
+    "n_modified": 44,
+    "n_untouched": 43,
     "n_shapeq": 0,
     "n_removed": 44
   },
@@ -599,16 +599,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 19,
+      "lnN": 40,
       "shape": 43
     },
     "untouched": {
-      "shape": 6,
-      "lnN": 19
+      "lnN": 19,
+      "shape": 43
     },
-    "n_modified": 58,
-    "n_untouched": 25,
-    "n_shapeq": 6,
+    "n_modified": 21,
+    "n_untouched": 62,
+    "n_shapeq": 0,
     "n_removed": 21
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_tautau_resolved1b_noak8_os_iso_spin_0_mass_700.txt": {
@@ -617,16 +617,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 19,
+      "lnN": 55,
       "shape": 28
     },
     "untouched": {
-      "shape": 8,
-      "lnN": 19
+      "lnN": 19,
+      "shape": 28
     },
-    "n_modified": 56,
-    "n_untouched": 27,
-    "n_shapeq": 3,
+    "n_modified": 36,
+    "n_untouched": 47,
+    "n_shapeq": 0,
     "n_removed": 36
   },
   "/data/dust/user/kramerto/taunn_data/store/WriteDatacards/hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/datacard_cat_2018_tautau_resolved2b_first_os_iso_spin_0_mass_700.txt": {
@@ -635,16 +635,16 @@
       "shape": 64
     },
     "after": {
-      "lnN": 19,
+      "lnN": 50,
       "shape": 33
     },
     "untouched": {
       "lnN": 19,
-      "shape": 5
+      "shape": 33
     },
-    "n_modified": 59,
-    "n_untouched": 24,
-    "n_shapeq": 5,
+    "n_modified": 31,
+    "n_untouched": 52,
+    "n_shapeq": 0,
     "n_removed": 31
   }
 }
