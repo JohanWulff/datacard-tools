@@ -164,7 +164,6 @@ def conservative_update(datacard: Datacard,
                         nuisance_type = "shape"
                     else:
                         nuisance_type = "shape?"
-                        n_shapeq += 1
                         continue # skip modification of mixed nuisances for now 
                         # remove_unused_shapes = True
                     rates.update({process: "1" for process in keep_processes})
@@ -232,7 +231,6 @@ def conservative_update(datacard: Datacard,
         "untouched": dict(stats_untouched),
         "n_modified": len(modified_nuisances),
         "n_untouched": len(untouched_nuisances),
-        "n_shapeq": n_shapeq,
         "n_removed": n_removed,
     }
 
