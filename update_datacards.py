@@ -196,7 +196,7 @@ def conservative_update(datacard: Datacard,
                 
                 # instead of removing unused shapes, we just create a new shapes file with only the used shapes
                 with uproot.recreate(output_shapes_file) as new_shapes_file:
-                    print(f"Keeping {len(keep_keys)}/{len(f.keys())} keys in shapes file {output_shapes_file}")
+                    #print(f"Keeping {len(keep_keys)}/{len(f.keys())} keys in shapes file {output_shapes_file}")
                     hists = datacard.get_shape_hists(keys=list(keep_keys), shapes_file_handle=f)
                     for key, hist in hists.items():
                         new_shapes_file[key] = hist
@@ -319,8 +319,19 @@ def loose_update(datacard: Datacard,
 
 def main():
     parser = argparse.ArgumentParser(description="Validate and update a datacard with non-genuine shape nuisances.")
-    parser.add_argument("datacard", type=str, help="Path(s) to the datacard(s) to be updated.", nargs='+')
-    parser.add_argument("output_path", type=str, help="Path to the directory where replacements will be stored.")
+    parser.add_argument("spin", type=int, choices=[0,2], help="Spin of the hypothetical particle (0 for Radion, 2 for Graviton).")
+    parser.add_argument("mass", type=int, help="Mass of the hypothetical particle in GeV.",
+                        choices=[250, 260, 270, 280, 300, 320, 350, 400, 450, 500,
+                                 550, 600, 650, 700, 750, 800, 850, 900, 1000, 1250,
+                                 1500, 1750, 2000, 2500, 3000])
+    parser.add_argument("--datacard-path", "-d", type=str, help="/path/to/the/datacards/", 
+                        default=("/data/dust/user/kramerto/taunn_data/store/WriteDatacards/"
+                                 "hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite"
+                                 "-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096"
+                                 "_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_"
+                                 "daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/"))
+    parser.add_argument("--output_path", "-o", type=str, help="/output/path/for/updated/datacards/",
+                        default="/data/dust/user/jwulff/inference/remodel_cards/")
     parser.add_argument("--validation_results_dir", type=str,
                         default="/tmp/jwulff/inference/validation_results/", help="Directory to store validation results.")
     parser.add_argument("--ignore-processes", nargs='*', default=["data_obs", "QCD"], help="Processes to ignore in the datacard.")
@@ -339,17 +350,24 @@ def main():
                             ignore_processes=args.ignore_processes)
         if args.update_mode == "conservative":
             stats = conservative_update(datacard,
-                                        Path(args.output_path),
+                                        Path(args.output_path) / f"spin_{args.spin}_mass_{args.mass}",
                                         args.validation_results_dir,
                                         only_remove=args.only_remove)
         else:
             stats = loose_update(datacard,
-                                 Path(args.output_path),
+                                 Path(args.output_path) / f"spin_{args.spin}_mass_{args.mass}",
                                  threshold=args.threshold)
         return str(datacard_path), stats
+    
+    # get the datacard paths
+    datacard_paths = list(Path(args.datacard_path).glob(f"datacard_cat_*_spin_{args.spin}_mass_{args.mass}.txt"))
+    if not datacard_paths:
+        print(f"No datacards found for spin {args.spin} and mass {args.mass} in {args.datacard_path}")
+        return
+    print(f"Found {len(datacard_paths)} datacards for spin {args.spin} and mass {args.mass} in {args.datacard_path}")
 
     with ThreadPoolExecutor(max_workers=args.n_threads) as executor:
-        results = thread_map(process_one, args.datacard, max_workers=args.n_threads, desc="Processing datacards")
+        results = thread_map(process_one, datacard_paths, max_workers=args.n_threads, desc="Processing datacards")
 
     for datacard_path, stats in results:
         all_stats[datacard_path] = stats
