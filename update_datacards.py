@@ -16,6 +16,9 @@ import uproot
 import subprocess
 import os
 
+from hist import Hist 
+import hist 
+
 
 def get_rate_string(up_rate, down_rate):
     if np.abs(1-up_rate) < 0.01 and np.abs(1-down_rate) < 0.01:
@@ -199,6 +202,7 @@ def conservative_update(datacard: Datacard,
                     #print(f"Keeping {len(keep_keys)}/{len(f.keys())} keys in shapes file {output_shapes_file}")
                     hists = datacard.get_shape_hists(keys=list(keep_keys), shapes_file_handle=f)
                     for key, hist in hists.items():
+                        hist = update_bugged_hist(hist)
                         new_shapes_file[key] = hist
             else:
                 # If no shapes were removed, just copy the file
@@ -234,7 +238,24 @@ def conservative_update(datacard: Datacard,
         "n_removed": n_removed,
     }
 
-    
+
+def update_bugged_hist(hist: Hist) -> None:
+    hist_vals, hist_vars = hist.values(), hist.variances()
+    assert np.all(np.isfinite(hist_vals)) and np.all(np.isfinite(hist_vars)), \
+        "Histogram values or variances are not finite."
+    if np.any(hist_vals < 1e-6):
+        hist_vals[hist_vals == 0] = 1e-6
+        hist_vars[hist_vals == 0] = 1e-5
+    elif np.any(hist_vars < 1e-5):
+        hist_vars[hist_vars == 0] = 1e-5
+    else:
+        return hist  # No bug found, return original histogram
+    new_hist = Hist(hist.axes[0], storage=hist.storage_type())
+    new_hist.view().value = hist_vals
+    new_hist.view().variance = hist_vars
+    return new_hist
+
+
 def loose_update(datacard: Datacard,
                  output_path: Path,
                  threshold: float = 0.01,) -> dict:
@@ -319,17 +340,23 @@ def loose_update(datacard: Datacard,
 
 def main():
     parser = argparse.ArgumentParser(description="Validate and update a datacard with non-genuine shape nuisances.")
-    parser.add_argument("spin", type=int, choices=[0,2], help="Spin of the hypothetical particle (0 for Radion, 2 for Graviton).")
-    parser.add_argument("mass", type=int, help="Mass of the hypothetical particle in GeV.",
-                        choices=[250, 260, 270, 280, 300, 320, 350, 400, 450, 500,
+    parser.add_argument("--spin", type=int, choices=[0,2], nargs="+", required=True,
+                        help="Spin of the hypothetical particle (0 for Radion, 2 for Graviton).")
+    parser.add_argument("--campaign", type=str, required=True,
+                        choices=(CAMPAIGNS:=("2016APV", "2016", "2017", "2018",)),)
+    parser.add_argument("--mass", type=int, nargs="+", required=False,
+                        choices=(MASSES:=[250, 260, 270, 280, 300, 320, 350, 400, 450, 500,
                                  550, 600, 650, 700, 750, 800, 850, 900, 1000, 1250,
-                                 1500, 1750, 2000, 2500, 3000])
-    parser.add_argument("--datacard-path", "-d", type=str, help="/path/to/the/datacards/", 
-                        default=("/data/dust/user/kramerto/taunn_data/store/WriteDatacards/"
+                                 1500, 1750, 2000, 2500, 3000]),
+                        default=MASSES,
+                        help=f"Mass of the hypothetical particle in GeV. Default: {MASSES}.")
+    parser.add_argument("--datacard-path", "-d", type=str, 
+                        default=(dc_path:=("/data/dust/user/kramerto/taunn_data/store/WriteDatacards/"
                                  "hbtres_PSnew_baseline_LSmulti3_SSdefault_FSdefault_daurot_composite"
                                  "-default_extended_pair_ED10_LU8x128_CTdense_ACTelu_BNy_LT50_DO0_BS4096"
                                  "_OPadamw_LR1.0e-03_YEARy_SPINy_MASSy_RSv6_fi80_lbn_ft_lt20_lr1_LBdefault_"
-                                 "daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/"))
+                                 "daurot_fatjet_composite_FIx5_SDx5/prod9/flats_systs10/final/symtest/")),
+                        help=f"Path to the datacards directory. Default: {dc_path}")
     parser.add_argument("--output_path", "-o", type=str, help="/output/path/for/updated/datacards/",
                         default="/data/dust/user/jwulff/inference/remodel_cards/")
     parser.add_argument("--validation_results_dir", type=str,
@@ -345,37 +372,48 @@ def main():
 
     all_stats = {}
 
-    def process_one(datacard_path):
+    def process_one(process_args):
+        datacard_path, spin, mass = process_args
         datacard = Datacard(datacard=Path(datacard_path),
                             ignore_processes=args.ignore_processes)
         if args.update_mode == "conservative":
             stats = conservative_update(datacard,
-                                        Path(args.output_path) / f"spin_{args.spin}_mass_{args.mass}",
+                                        Path(args.output_path) / "conservative" / f"spin_{spin}_mass_{mass}",
                                         args.validation_results_dir,
                                         only_remove=args.only_remove)
         else:
             stats = loose_update(datacard,
-                                 Path(args.output_path) / f"spin_{args.spin}_mass_{args.mass}",
+                                 Path(args.output_path) / "loose" / f"spin_{spin}_mass_{mass}",
                                  threshold=args.threshold)
         return str(datacard_path), stats
     
+        
+    
     # get the datacard paths
-    datacard_paths = list(Path(args.datacard_path).glob(f"datacard_cat_*_spin_{args.spin}_mass_{args.mass}.txt"))
-    if not datacard_paths:
-        print(f"No datacards found for spin {args.spin} and mass {args.mass} in {args.datacard_path}")
-        return
-    print(f"Found {len(datacard_paths)} datacards for spin {args.spin} and mass {args.mass} in {args.datacard_path}")
+    datacard_paths = []
+    for spin in args.spin:
+        for mass in args.mass:
+            paths = list(Path(args.datacard_path).glob(f"datacard_cat_{args.campaign}_*_spin_{spin}_mass_{mass}.txt"))
+            if not paths:
+                print(f"No datacards found for campaign {args.campaign}, spin {spin} and mass {mass} in {args.datacard_path}")
+                continue
+            datacard_paths.extend(paths)
 
+    proc_args = [(str(path), re.search(r"spin_(\d+)", path.name).group(1),
+               re.search(r"mass_(\d+)", path.name).group(1)) for path in datacard_paths]
+
+    print(f"Found {len(datacard_paths)} ({len(datacard_paths)/(len(args.mass)*len(args.spin))} per hypothesis) datacards for campaign {args.campaign}, spin {args.spin} and mass {args.mass} in {args.datacard_path}")
     with ThreadPoolExecutor(max_workers=args.n_threads) as executor:
-        results = thread_map(process_one, datacard_paths, max_workers=args.n_threads, desc="Processing datacards")
+        results = thread_map(process_one, proc_args, max_workers=args.n_threads, desc="Processing datacards")
 
     for datacard_path, stats in results:
         all_stats[datacard_path] = stats
 
     # Write all stats to JSON
-    with open(f"{args.output_path}/update_stats.json", "w") as f:
+    json_file = f"{args.output_path}/{args.update_mode}/update_stats_s_{'-'.join(map(str,args.spin))}_m_{'-'.join(map(str,args.mass))}.json"
+    with open(json_file, "a") as f:
         json.dump(all_stats, f, indent=2)
-    print(f"\nWrote statistics for {len(all_stats)} datacards to {args.output_path}/update_stats.json")
+    print(f"\nWrote statistics for {len(all_stats)} datacards to {json_file}") 
 
 if __name__ == "__main__":
     main()
