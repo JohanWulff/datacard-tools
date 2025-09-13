@@ -4,7 +4,6 @@ from typing import List, Dict, Tuple
 from pathlib import Path
 import shutil
 
-from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 from tqdm.contrib.concurrent import thread_map
 import argparse
@@ -15,6 +14,8 @@ import re
 import uproot
 import subprocess
 import os
+
+from multiprocessing import Pool, Manager
 
 from hist import Hist 
 import hist 
@@ -128,6 +129,18 @@ def conservative_update(datacard: Datacard,
         keep_keys = set([re.sub(";\d", "", key) for key, cname in cnames.items() if key.startswith(datacard.dirname)
                          and cname == "TH1D"]) 
         validation_results = datacard.validate(validation_results_dir)
+    
+        # before doing any update, check if there's any signal in the datacard
+        signal_names = [p for p in datacard.processes if (("ggf" in p) or ("vbf" in p))]
+        assert len(signal_names) == 1
+        signal_name = signal_names[0]
+        nominal_signal = f[f"{datacard.dirname}/{signal_name}"].to_hist()
+        if nominal_signal.sum().value <= 1e-5:
+            print(f"{signal_name} Integral <= 0.00001")
+            print(f"{datacard.datacard.name} won't be copied as it contains no signal")
+            return {}
+            
+        #from IPython import embed; embed()
         if not validation_results:
             print(f"Validation failed for {datacard.datacard}, skipping update.")
             return {} 
@@ -137,7 +150,7 @@ def conservative_update(datacard: Datacard,
 
         if not "smallShapeEff" in validation_results_json:
             print(f"No smallShapeEffect warnings found in validation results for {datacard.datacard}")
-            return False
+            return {}
         else:
             small_shape_effects = validation_results_json["smallShapeEff"]
             cat_name = next(iter(small_shape_effects[next(iter(small_shape_effects))]))
@@ -403,8 +416,12 @@ def main():
                re.search(r"mass_(\d+)", path.name).group(1)) for path in datacard_paths]
 
     print(f"Found {len(datacard_paths)} ({len(datacard_paths)/(len(args.mass)*len(args.spin))} per hypothesis) datacards for campaign {args.campaign}, spin {args.spin} and mass {args.mass} in {args.datacard_path}")
-    with ThreadPoolExecutor(max_workers=args.n_threads) as executor:
+    #with ThreadPoolExecutor(max_workers=args.n_threads) as executor:
+    with Manager() as manager:
+        pool = Pool(processes=args.n_threads)
         results = thread_map(process_one, proc_args, max_workers=args.n_threads, desc="Processing datacards")
+        pool.close()
+        pool.join()
 
     for datacard_path, stats in results:
         all_stats[datacard_path] = stats
