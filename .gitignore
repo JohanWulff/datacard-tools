@@ -1,6 +1,6 @@
 # ignore any subdirectories
 *.pyc
-__pycache__
+__pycache__/
 *.txt 
 *.root
 *.json
