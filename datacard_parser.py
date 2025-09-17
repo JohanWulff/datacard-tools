@@ -84,6 +84,21 @@ class Datacard:
             self.isolation
         ])
 
+        
+    @property
+    def rate_nuisances(self) -> List[str]:
+        """
+        Get a list of rate nuisances in the datacard.
+        """
+        return [n for n, t in self.get_nuisance_types().items() if t == "lnN"]
+
+    @property
+    def shape_nuisances(self) -> List[str]:
+        """
+        Get a list of shape nuisances in the datacard.
+        """
+        return [n for n, t in self.get_nuisance_types().items() if t == "shape"]
+
     @property
     def n_nuisances(self) -> int:
         """
@@ -317,3 +332,36 @@ class Datacard:
                 return {key: f[key].to_hist() for key in keys}
         else:
             return {key: shapes_file_handle[key].to_hist() for key in keys}
+
+    
+    def get_shape_keys(self, shapes_file_handle=None) -> List[str]:
+        """
+        Get the keys of all shape histograms in the shapes file.
+        """
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                return [re.sub(";\d+", "", key) for key in f[self.dirname].keys() if "__" in key and any(s in key for s in ("Up", "Down"))]
+        else:
+            return [re.sub(";\d+", "", key) for key in shapes_file_handle[self.dirname].keys() if "__" in key and any(s in key for s in ("Up", "Down"))]
+
+    
+    def get_nominal_keys(self, shapes_file_handle=None) -> List[str]:
+        """
+        Get the keys of all nominal histograms in the shapes file.
+        """
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                return [re.sub(";\d+", "", key) for key in f[self.dirname].keys() if "__" not in key and any(p in key for p in self.processes)]
+        else:
+            return [re.sub(";\d+", "", key) for key in shapes_file_handle[self.dirname].keys() if "__" not in key and any(p in key for p in self.processes)]
+    
+    
+    def get_hist_keys(self, shapes_file_handle=None) -> List[str]:
+        """
+        Get the keys of all histograms in the shapes file.
+        """
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                return [re.sub(";\d+", "", key) for key in f[self.dirname].keys()]
+        else:
+            return [re.sub(";\d+", "", key) for key in shapes_file_handle[self.dirname].keys()]
