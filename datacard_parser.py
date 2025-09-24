@@ -61,6 +61,9 @@ class Datacard:
         process_ids = list(map(int, self.process_lines[1].strip().split()[1:]))
         self.processes = [p for p in self.all_processes if not any(ignored in p for ignored in self.ignore_processes)]
         self.process_to_id = {p: i for i, p in zip(process_ids, self.processes) if not any(ignored in p for ignored in self.ignore_processes)}
+        # assumes that signal process is always the one with the lowest id
+        self.signal_process = min(self.process_to_id, key=self.process_to_id.get)
+        self.background_processes = [p for p in self.processes if p != self.signal_process]
 
         # get a nuisance line
         # nuisance type position is one space after the name of the longest nuisance
@@ -183,14 +186,6 @@ class Datacard:
                 print(f"Warning: Nominal value for process {process} is too small ({nominal_sum}), skipping.")
             up_rate = up_hist.sum().value / nominal_sum
             down_rate = down_hist.sum().value / nominal_sum 
-            
-            #nominal_vals = nominal_hist.values()
-            #up_vals = up_hist.values()
-            #down_vals = down_hist.values()
-            ## Avoid division by zero
-            #with np.errstate(divide='ignore', invalid='ignore'):
-                #up_rate = np.nanmean(np.where(nominal_vals != 0, up_vals / nominal_vals, 1.0))
-                #down_rate = np.nanmean(np.where(nominal_vals != 0, down_vals / nominal_vals, 1.0))
             rates[process] = (up_rate, down_rate)
         return rates
 
@@ -248,38 +243,6 @@ class Datacard:
             return False
 
 
-    def get_shape_var(self, nuisance, shapes_file_handle=None) -> float:
-        """
-        Get the max variation of a shape vs the nominal shape for a given nuisance.
-        """
-        if nuisance not in self.get_nuisance_types():
-            raise ValueError(f"Nuisance {nuisance} not found in datacard {self.datacard}")
-        nuisance_type = self.get_nuisance_types()[nuisance]
-        if nuisance_type != "shape":
-            raise ValueError(f"Nuisance {nuisance} is not a shape nuisance in datacard {self.datacard}")
-        
-        # Use the provided file handle, or open if not provided
-        if shapes_file_handle is None:
-            with uproot.open(self.shapes_file) as f:
-                nominal_hist = f[self.dirname][f"{self.processes[0]}"].to_hist()
-                up_hist = f[self.dirname][f"{self.processes[0]}__{nuisance}Up"].to_hist()
-                down_hist = f[self.dirname][f"{self.processes[0]}__{nuisance}Down"].to_hist()
-        else:
-            nominal_hist = shapes_file_handle[self.dirname][f"{self.processes[0]}"].to_hist()
-            up_hist = shapes_file_handle[self.dirname][f"{self.processes[0]}__{nuisance}Up"].to_hist()
-            down_hist = shapes_file_handle[self.dirname][f"{self.processes[0]}__{nuisance}Down"].to_hist()
-
-        # Calculate the max variation
-        nominal_vals = nominal_hist.values()
-        up_vals = up_hist.values()
-        down_vals = down_hist.values()
-
-        # get the largest relative variation
-        up_var = np.nanmax(np.where(nominal_vals != 0, np.abs(up_vals - nominal_vals) / nominal_vals, 0))
-        down_var = np.nanmax(np.where(nominal_vals != 0, np.abs(down_vals - nominal_vals) / nominal_vals, 0))
-        return max(up_var, down_var)
-    
-
     def _get_sum_shape_var(self, nuisance, process, shapes_file_handle) -> tuple[float, float]:
         """
         Get the sum of the differences between the nominal shape and the up/down variations
@@ -322,16 +285,16 @@ class Datacard:
             return [process for process, (up_var, down_var) in vars.items() if up_var < threshold and down_var < threshold]
 
     
-    def get_shape_hists(self, keys: list[str], shapes_file_handle=None) -> Dict[str, Hist]: 
+    def get_shape_hists(self, nuisances: list[str], shapes_file_handle=None) -> Dict[str, Hist]: 
         """
         Get the shape histograms for a list of nuisances.
         Returns a dictionary with nuisance names as keys and a dictionary of process histograms as values.
         """
         if shapes_file_handle is None:
             with uproot.open(self.shapes_file) as f:
-                return {key: f[key].to_hist() for key in keys}
+                return {nuisance: f[nuisance].to_hist() for nuisance in nuisances}
         else:
-            return {key: shapes_file_handle[key].to_hist() for key in keys}
+            return {nuisance: shapes_file_handle[nuisance].to_hist() for nuisance in nuisances}
 
     
     def get_shape_keys(self, shapes_file_handle=None) -> List[str]:
@@ -365,3 +328,36 @@ class Datacard:
                 return [re.sub(";\d+", "", key) for key in f[self.dirname].keys()]
         else:
             return [re.sub(";\d+", "", key) for key in shapes_file_handle[self.dirname].keys()]
+
+    
+    def get_bin_variations(self, nuisance: str, process: str, shapes_file_handle=None) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Get the bin-by-bin variations for a given shape nuisance and process.
+        Returns a tuple of (up_variations, down_variations) as numpy arrays.
+        """
+        nuisance_type = self.get_nuisance_types()[nuisance]
+        if nuisance_type != "shape":
+            raise ValueError(f"Nuisance {nuisance} is not a shape nuisance in datacard {self.datacard}")
+        if process not in self.processes:
+            raise ValueError(f"Process {process} not found in datacard {self.datacard}")
+
+        # Use the provided file handle, or open if not provided
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                nominal_hist = f[self.dirname][f"{process}"].to_hist()
+                up_hist = f[self.dirname][f"{process}__{nuisance}Up"].to_hist()
+                down_hist = f[self.dirname][f"{process}__{nuisance}Down"].to_hist()
+        else:
+            nominal_hist = shapes_file_handle[self.dirname][f"{process}"].to_hist()
+            up_hist = shapes_file_handle[self.dirname][f"{process}__{nuisance}Up"].to_hist()
+            down_hist = shapes_file_handle[self.dirname][f"{process}__{nuisance}Down"].to_hist()
+
+        nominal_vals = nominal_hist.values()
+        up_vals = up_hist.values()
+        down_vals = down_hist.values()
+
+        # Calculate the bin-by-bin variations
+        up_variations = up_vals / nominal_vals
+        down_variations = down_vals / nominal_vals
+
+        return up_variations, down_variations
