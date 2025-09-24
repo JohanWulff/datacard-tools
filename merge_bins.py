@@ -13,24 +13,21 @@ def merge_bins(h, bin_idx, direction):
     variances = h.variances() if h.variances() is not None else np.zeros_like(values)
     n_bins = len(values)
 
+    keep = [i for i in range(n_bins) if i != bin_idx]
+    new_values = values[keep]
     if direction == "left":
         if bin_idx == 0:
             raise ValueError("Cannot merge leftmost bin to the left.")
-        keep = [i for i in range(n_bins) if i != bin_idx]
-        new_values = values[keep]
-        new_variances = variances[keep]
-        new_values[bin_idx-1] += values[bin_idx]
-        new_variances[bin_idx-1] += variances[bin_idx]
+        idx_to_merge_into = bin_idx - 1
     elif direction == "right":
         if bin_idx == n_bins - 1:
             raise ValueError("Cannot merge rightmost bin to the right.")
-        keep = [i for i in range(n_bins) if i != bin_idx]
-        new_values = values[keep]
-        new_variances = variances[keep]
-        new_values[bin_idx] += values[bin_idx]
-        new_variances[bin_idx] += variances[bin_idx]
+        idx_to_merge_into = bin_idx
     else:
         raise ValueError("Direction must be 'left' or 'right'.")
+    new_variances = variances[keep]
+    new_values[idx_to_merge_into] += values[bin_idx]
+    new_variances[idx_to_merge_into] += variances[bin_idx]
 
     axes = h.axes
     edges = axes[0].edges
