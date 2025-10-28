@@ -213,7 +213,7 @@ def conservative_update(datacard: Datacard,
                 # instead of removing unused shapes, we just create a new shapes file with only the used shapes
                 with uproot.recreate(output_shapes_file) as new_shapes_file:
                     #print(f"Keeping {len(keep_keys)}/{len(f.keys())} keys in shapes file {output_shapes_file}")
-                    hists = datacard.get_shape_hists(keys=list(keep_keys), shapes_file_handle=f)
+                    hists = datacard.get_shape_hists(nuisances=list(keep_keys), shapes_file_handle=f)
                     for key, hist in hists.items():
                         hist = update_bugged_hist(hist)
                         new_shapes_file[key] = hist
@@ -349,6 +349,83 @@ def loose_update(datacard: Datacard,
         "n_removed": len(removed_nuisances),
     }
 
+# new function for checking large shape effects that are probably none-physical
+def fix_large_shapes(datacard: Datacard,
+                     output_path: Path):
+    """
+    Check each shape effect for large shape effects and adjust them to neighboring bins if necessary. 
+    A shape effect is considered unphysical if it's larger than 100 times the nominal value. 
+    """
+
+    def smoothen(idx: int, variations: np.ndarray,) -> np.ndarray:
+        """
+        helper to smoothen the variations
+        """
+        # what to do if there's only one bin?
+        if len(variations) == 1:
+            # cannot smoothen based on other bins, so just
+            return variations 
+        # check if bin_idx is on the border 
+        if idx == 0 or idx == len(variations)-1:
+            variations[idx] == variations[idx+1] if idx == 0 else variations[idx-1]
+        else:
+            variations[idx] = (variations[idx+1]+variations[idx-1])/2.
+        return variations
+
+    changed = {}
+    with uproot.open(datacard.shapes_file) as f:
+        for nuisance in datacard.shape_nuisances:
+            for bkgd in datacard.background_processes:
+                up_var, down_var = datacard.get_bin_variations(nuisance, bkgd, shapes_file_handle=f)
+                # print a warning if one of the variations is more than 100 times as large as the other one
+                problematic_bins_up = up_var > 100
+                problematic_bins_down = down_var < 1/100
+                if any(problematic_bins_up) or any(problematic_bins_down):
+                    # check if problematic bins are neighbors, if yes, raise a warning
+                    bin_ids_up = np.where(problematic_bins_up)[0]
+                    diff = bin_ids_up[1:] - bin_ids_up[:-1]
+                    if np.any(diff == 1):
+                        print(f"Warning: Found neighboring large shape effects for nuisance {nuisance} and process {bkgd} in datacard {datacard.datacard.name}")
+                        print(f"Will not smoothen these bins.")
+                        print(f"Up variations: {up_var}")
+                    bin_ids_down = np.where(problematic_bins_down)[0]
+                    diff = bin_ids_down[1:] - bin_ids_down[:-1]
+                    if np.any(diff == 1):
+                        print(f"Warning: Found neighboring large shape effects for nuisance {nuisance} and process {bkgd} in datacard {datacard.datacard.name}")
+                        print(f"Will not smoothen these bins.")
+                        print(f"Down variations: {down_var}")
+                    print(f"Warning: Found large shape effect for nuisance {nuisance} and process {bkgd} in datacard {datacard.datacard.name}")
+                    print(f"Up variations: {up_var}")
+                    print(f"Down variations: {down_var}")
+                    # smoothen the variations
+                    corrected_up_var = np.copy(up_var)
+                    corrected_down_var = np.copy(down_var)
+                    for bins in problematic_bins_up:
+                        corrected_up_var = smoothen(bins, corrected_up_var)
+                    for bins in problematic_bins_down:
+                        corrected_down_var = smoothen(bins, corrected_down_var)
+
+                    up_shape = f[f"{datacard.dirname}/{bkgd}__{nuisance}Up"].to_hist()
+                    down_shape = f[f"{datacard.dirname}/{bkgd}__{nuisance}Down"].to_hist()
+                    nom_shape = f[f"{datacard.dirname}/{bkgd}"].to_hist()
+                    # apply the corrected variations to the shapes
+                    up_shape.view().value = nom_shape.values() * corrected_up_var
+                    down_shape.view().value = nom_shape.values() * corrected_down_var
+                    changed[f"{datacard.dirname}/{bkgd}_{nuisance}Up"] = up_shape
+                    changed[f"{datacard.dirname}/{bkgd}_{nuisance}Down"] = down_shape
+        # save changes
+        if changed:
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+            # first read all histograms that are not changed
+            keep_keys = set([re.sub(";\d", "", key) for key, cname in f.classnames().items() if key.startswith(datacard.dirname)
+                                and cname == "TH1D"]) - set(changed.keys())
+            output_shapes_file = Path(output_path) / datacard.shapes_file.name
+            hists = datacard.get_shape_hists(nuisances=list(keep_keys), shapes_file_handle=f)
+            hists.update(changed)
+            with uproot.recreate(output_shapes_file) as new_shapes_file:
+                for key, hist in hists.items():
+                    new_shapes_file[key] = hist
 
 
 def main():
@@ -377,8 +454,8 @@ def main():
     parser.add_argument("--ignore-processes", nargs='*', default=["data_obs", "QCD"], help="Processes to ignore in the datacard.")
     parser.add_argument("--n-threads", type=int, default=4, help="Number of threads for parallel processing.")
     parser.add_argument("--only-remove", action="store_true", help="Only remove nuisances, do not convert shape to lnN.")
-    parser.add_argument("--update-mode", choices=["conservative", "loose"], default="conservative",
-                        help="Choose update mode: 'conservative' (default) or 'loose'.")
+    parser.add_argument("--update-mode", choices=["conservative", "loose", "smoothen"], default="conservative",
+                        help="Choose update mode: 'conservative' (default), 'loose' or 'smoothen'.")
     parser.add_argument("--threshold", type=float, default=0.01,
                         help="Threshold for non-genuine shape detection (only used in loose mode).")
     args = parser.parse_args()
@@ -391,16 +468,18 @@ def main():
                             ignore_processes=args.ignore_processes)
         if args.update_mode == "conservative":
             stats = conservative_update(datacard,
-                                        Path(args.output_path) / "conservative" / f"spin_{spin}_mass_{mass}",
+                                        Path(args.output_path) / "conservative" ,
                                         args.validation_results_dir,
                                         only_remove=args.only_remove)
-        else:
+        elif args.update_mode == "loose": 
             stats = loose_update(datacard,
-                                 Path(args.output_path) / "loose" / f"spin_{spin}_mass_{mass}",
+                                 Path(args.output_path) / "loose" ,
                                  threshold=args.threshold)
+        elif args.update_mode == "smoothen":
+            fix_large_shapes(datacard,
+                             Path(args.output_path) / "smoothen")
+            stats = {"status": "shapes checked and smoothened if necessary"}
         return str(datacard_path), stats
-    
-        
     
     # get the datacard paths
     datacard_paths = []
