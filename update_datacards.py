@@ -4,18 +4,16 @@ from typing import List, Dict, Tuple
 from pathlib import Path
 import shutil
 
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
 from tqdm import tqdm
-from tqdm.contrib.concurrent import thread_map
 import argparse
-import collections
 import json
 import numpy as np
 import re
 import uproot
 import subprocess
 import os
-
-from multiprocessing import Pool, Manager
 
 from hist import Hist 
 import hist 
@@ -99,10 +97,9 @@ def replace_nuisance_lines(old_card: Datacard,
 def conservative_update(datacard: Datacard,
                     output_path: Path,
                     validation_results_dir: str,
-                    only_remove: bool = False) -> dict:
+                    only_remove: bool = False) -> None:
     """
     Update the datacard with non-genuine shape nuisances modelled as rate nuisances.
-    Also returns statistics about nuisance types before and after the update.
     If only_remove is True, only remove nuisances, do not convert to lnN.
     """
     def get_rate_string(up_rate, down_rate):
@@ -114,16 +111,6 @@ def conservative_update(datacard: Datacard,
         else:
             return f"{np.max((down_rate, up_rate)):.3f}"
 
-    # --- STATISTICS: BEFORE UPDATE ---
-    nuisance_types_before = datacard.get_nuisance_types()  # {nuisance: type}
-    stats_before = collections.Counter(nuisance_types_before.values())
-
-    modified_nuisances = set()
-    untouched_nuisances = set(nuisance_types_before.keys())
-
-    # New counters
-    n_removed = 0
-
     with uproot.open(datacard.shapes_file) as f:
         cnames = f.classnames()
         keep_keys = set([re.sub(";\d", "", key) for key, cname in cnames.items() if key.startswith(datacard.dirname)
@@ -131,26 +118,34 @@ def conservative_update(datacard: Datacard,
         validation_results = datacard.validate(validation_results_dir)
     
         # before doing any update, check if there's any signal in the datacard
-        signal_names = [p for p in datacard.processes if (("ggf" in p) or ("vbf" in p))]
-        assert len(signal_names) == 1
-        signal_name = signal_names[0]
-        nominal_signal = f[f"{datacard.dirname}/{signal_name}"].to_hist()
-        if nominal_signal.sum().value <= 1e-5:
-            print(f"{signal_name} Integral <= 0.00001")
-            print(f"{datacard.datacard.name} won't be copied as it contains no signal")
-            return {}
+        ## NOTE: Not copying datacards with no signal to the output directory is debatable. 
+        ## the one bin clearly contributes to the background modelling so should probably be kept.
+        ## I personally don't expect a large discprepancy on limit level however. 
+
+        #signal_names = [p for p in datacard.processes if (("ggf" in p) or ("vbf" in p))]
+        #assert len(signal_names) == 1
+        #signal_name = signal_names[0]
+        #nominal_signal = f[f"{datacard.dirname}/{signal_name}"].to_hist()
+        #if nominal_signal.sum().value <= 1e-5:
+        #    print(f"{signal_name} Integral <= 0.00001")
+        #    print(f"{datacard.datacard.name} won't be copied as it contains no signal")
+        #    return {}
             
         #from IPython import embed; embed()
         if not validation_results:
-            print(f"Validation failed for {datacard.datacard}, skipping update.")
-            return {} 
+            raise ValueError(f"Validation failed for datacard {datacard.datacard.name}. Cannot proceed with update.")
 
         with open(validation_results, "r") as vf:
             validation_results_json = json.load(vf)
 
         if not "smallShapeEff" in validation_results_json:
-            print(f"No smallShapeEffect warnings found in validation results for {datacard.datacard}")
-            return {}
+            print(f"No small shape effects found for datacard {datacard.datacard.name}. No update necessary.")
+            # copy the datacard and the shapes file to the output directory
+            output_datacard_path = Path(output_path) / datacard.datacard.name
+            shutil.copy(datacard.datacard, output_datacard_path)
+            output_shapes_file = Path(output_path) / datacard.shapes_file.name
+            shutil.copy(datacard.shapes_file, output_shapes_file)
+            return
         else:
             small_shape_effects = validation_results_json["smallShapeEff"]
             cat_name = next(iter(small_shape_effects[next(iter(small_shape_effects))]))
@@ -165,13 +160,11 @@ def conservative_update(datacard: Datacard,
                     # Check if all entries are "-"
                     if all(rate == "-" for rate in rates.values()):
                         nuisance_type = "shape"
-                        n_removed += 1
                     else:
                         nuisance_type = "lnN"
                         if only_remove:
                             continue  # Skip conversion if only_remove is set
                     modifications.append((nuisance, nuisance_type, rates))
-                    modified_nuisances.add(nuisance)
                 elif len(small_shape_effects[nuisance]) < len(datacard.processes):
                     rates = datacard.get_rates(nuisance, shapes_file_handle=f)
                     keep_processes =  set(datacard.processes) - set(small_shape_effects[nuisance].keys())
@@ -184,83 +177,51 @@ def conservative_update(datacard: Datacard,
                         # remove_unused_shapes = True
                     rates.update({process: "1" for process in keep_processes})
                     modifications.append((nuisance, nuisance_type, rates))
-                    modified_nuisances.add(nuisance)
                 else:
                     raise ValueError(f"Unexpected number of processes for nuisance {nuisance} in datacard {datacard.datacard.name}")
 
                 remove_unused_shapes = set([f"{datacard.dirname}/{p}_{nuisance}{ud}"
                                                 for p in small_shape_effects[nuisance].keys()
                                                 for ud in ["Up", "Down"]])
-                # Remove unused nuisances
-                keep_keys -= remove_unused_shapes
-
-            untouched_nuisances -= modified_nuisances
             keep_keys -= remove_unused_shapes
 
             # Apply all modifications at once
             if modifications:
                 replace_nuisance_lines(datacard, output_path, modifications)
-
+            
             output_shapes_file = Path(output_path) / datacard.shapes_file.name
             shutil.copy(datacard.shapes_file, output_shapes_file)
             if remove_unused_shapes:
-                #retcode = subprocess.run(["remove_unused_shapes.py", str(datacard.datacard), "*,*", "--inplace-shapes"],
-                               #stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                #if retcode.returncode != 0:
-                    #print(f"Error removing unused shapes: {retcode.stderr}")
-                    #return False
-                
                 # instead of removing unused shapes, we just create a new shapes file with only the used shapes
                 with uproot.recreate(output_shapes_file) as new_shapes_file:
                     #print(f"Keeping {len(keep_keys)}/{len(f.keys())} keys in shapes file {output_shapes_file}")
                     hists = datacard.get_shape_hists(nuisances=list(keep_keys), shapes_file_handle=f)
                     for key, hist in hists.items():
-                        hist = update_bugged_hist(hist)
-                        new_shapes_file[key] = hist
+                        try:
+                            hist = update_bugged_hist(hist)
+                            new_shapes_file[key] = hist
+                        except ValueError:
+                            print(f"Warning: Found non-finite values in histogram {key} for datacard {datacard.datacard.name}. Keeping original histogram without update.")
+                            print(f"Take a look at the shapes file {datacard.shapes_file} for more details.")
             else:
                 # If no shapes were removed, just copy the file
                 shutil.copy(datacard.shapes_file, output_shapes_file)
-                    
-
-    # --- STATISTICS: AFTER UPDATE ---
-    updated_datacard_path = Path(output_path) / datacard.datacard.name
-    updated_datacard = Datacard(datacard=updated_datacard_path, ignore_processes=datacard.ignore_processes)
-    nuisance_types_after = updated_datacard.get_nuisance_types()
-    stats_after = collections.Counter(nuisance_types_after.values())
-
-    # --- STATISTICS: UNTOUCHED ---
-    untouched_types = [nuisance_types_before[n] for n in untouched_nuisances]
-    stats_untouched = collections.Counter(untouched_types)
-
-    # --- PRINT STATISTICS ---
-    #print("\nNuisance statistics:")
-    #print("Before update:", dict(stats_before))
-    #print("After update: ", dict(stats_after))
-    #print("Untouched:    ", dict(stats_untouched))
-    #print(f"Modified:     {len(modified_nuisances)}")
-    #print(f"Untouched:    {len(untouched_nuisances)}")
-    #print(f'Updated to "shape?": {n_shapeq}')
-    #print(f'Removed: {n_removed}\n')
-
-    return {
-        "before": dict(stats_before),
-        "after": dict(stats_after),
-        "untouched": dict(stats_untouched),
-        "n_modified": len(modified_nuisances),
-        "n_untouched": len(untouched_nuisances),
-        "n_removed": n_removed,
-    }
 
 
 def update_bugged_hist(hist: Hist) -> None:
     hist_vals, hist_vars = hist.values(), hist.variances()
-    assert np.all(np.isfinite(hist_vals)) and np.all(np.isfinite(hist_vars)), \
-        "Histogram values or variances are not finite."
-    if np.any(hist_vals < 1e-6):
-        hist_vals[hist_vals == 0] = 1e-6
-        hist_vars[hist_vals == 0] = 1e-5
-    elif np.any(hist_vars < 1e-5):
-        hist_vars[hist_vars == 0] = 1e-5
+    if not np.all(np.isfinite(hist_vals)):
+        # if there are non-finite values, set them to a small number and print a warning
+        raise ValueError("Found non-finite values in histogram.")
+    if not np.all(np.isfinite(hist_vars)):
+        print(f"Warning: Found non-finite bin-errors in histogram {hist}")
+        hist_vals[~np.isfinite(hist_vals)] = 1e-6
+        hist_vars[~np.isfinite(hist_vars)] = 1e-5
+    if np.any(mask:= (hist_vals < 1e-5)):
+        hist_vals[mask] = 1e-5
+        hist_vars[mask] = 1e-6
+    elif np.any(mask:=(hist_vars < 1e-6)):
+        hist_vars[mask] = 1e-6
     else:
         return hist  # No bug found, return original histogram
     new_hist = Hist(hist.axes[0], storage=hist.storage_type())
@@ -271,7 +232,7 @@ def update_bugged_hist(hist: Hist) -> None:
 
 def loose_update(datacard: Datacard,
                  output_path: Path,
-                 threshold: float = 0.01,) -> dict:
+                 threshold: float = 0.01,) -> None:
 
     """
     Update the datacard with non-genuine shape nuisances modelled as rate nuisances.
@@ -279,12 +240,6 @@ def loose_update(datacard: Datacard,
     """
 
     nuisance_types_before = datacard.get_nuisance_types()  # {nuisance: type}
-    stats_before = collections.Counter(nuisance_types_before.values())
-
-    modified_nuisances = set()
-    removed_nuisances = set()
-    modified_nuisances = set()
-    mixed_nuisances = set()
     with uproot.open(datacard.shapes_file) as f:
         cnames = f.classnames()
         keep_keys = set([re.sub(";\d", "", key) for key, cname in cnames.items() if key.startswith(datacard.dirname)
@@ -296,10 +251,6 @@ def loose_update(datacard: Datacard,
             rates = datacard.get_rates(nuisance, shapes_file_handle=f)
             flagged = datacard.get_shape_vars(nuisance, threshold=threshold, shapes_file_handle=f)
             if len(flagged) == datacard.processes:
-                if all(rate == "-" for rate in rates.values()):
-                    removed_nuisances.add(nuisance)
-                else:
-                    modified_nuisances.add(nuisance)
                 rate_entries = {process: get_rate_string(*rates[process]) for process in rates}
                 modifications.append((nuisance, "lnN", rate_entries))
             elif len(flagged) < len(datacard.processes):
@@ -307,11 +258,8 @@ def loose_update(datacard: Datacard,
                 keep_processes = set(datacard.processes) - set(flagged)
                 rate_entries = {process: get_rate_string(*rates[process]) for process in flagged}
                 if all(rate == "-" for rate in rate_entries.values()):
-                    modified_nuisances.add(nuisance)
                     nuisance_type = "shape"
                 else:
-                    modified_nuisances.add(nuisance)
-                    mixed_nuisances.add(nuisance)
                     nuisance_type = "shape?"
                 rate_entries.update({process: "1" for process in keep_processes})
                 modifications.append((nuisance, nuisance_type, rate_entries))
@@ -328,26 +276,6 @@ def loose_update(datacard: Datacard,
         hists = datacard.get_shape_hists(keys=list(keep_keys), shapes_file_handle=f)
         for key, hist in hists.items():
             new_shapes_file[key] = hist
-
-    # --- STATISTICS ---
-    updated_datacard_path = Path(output_path) / datacard.datacard.name
-    updated_datacard = Datacard(datacard=updated_datacard_path, ignore_processes=datacard.ignore_processes)
-    nuisance_types_after = updated_datacard.get_nuisance_types()
-    stats_after = collections.Counter(nuisance_types_after.values())
-    stats_before = collections.Counter(nuisance_types_before.values())
-    untouched_nuisances = set(nuisance_types_before.keys()) - modified_nuisances - removed_nuisances
-    stats_untouched = collections.Counter([nuisance_types_before[n] for n in untouched_nuisances])
-    return {
-        "before": dict(stats_before),
-        "after": dict(stats_after),
-        "unaltered": dict(stats_untouched),
-        "n_unaltered": len(untouched_nuisances),
-        "altered": dict(collections.Counter(nuisance_types_after[n] for n in modified_nuisances)),
-        "n_altered": len(modified_nuisances)+ len(mixed_nuisances) + len(removed_nuisances),
-        "n_converted": len(modified_nuisances),
-        "n_mixed": len(mixed_nuisances),
-        "n_removed": len(removed_nuisances),
-    }
 
 # new function for checking large shape effects that are probably none-physical
 def fix_large_shapes(datacard: Datacard,
@@ -428,12 +356,31 @@ def fix_large_shapes(datacard: Datacard,
                     new_shapes_file[key] = hist
 
 
+def process_datacard_wrapper(
+    datacard_path: str,
+    ignore_processes: list[str],
+    update_mode: str,
+    output_path: str,
+    validation_results_dir: str,
+    only_remove: bool,
+    threshold: float,
+) -> None:
+    datacard = Datacard(datacard=Path(datacard_path), ignore_processes=ignore_processes)
+    if update_mode == "conservative":
+        conservative_update(
+            datacard,
+            Path(output_path) / "conservative",
+            validation_results_dir,
+            only_remove=only_remove,
+        )
+    elif update_mode == "loose":
+        loose_update(datacard, Path(output_path) / "loose", threshold=threshold)
+    elif update_mode == "smoothen":
+        fix_large_shapes(datacard, Path(output_path) / "smoothen")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Validate and update a datacard with non-genuine shape nuisances.")
-    parser.add_argument("--spin", type=int, choices=[0,2], nargs="+", required=True,
-                        help="Spin of the hypothetical particle (0 for Radion, 2 for Graviton).")
-    parser.add_argument("--campaign", type=str, required=True,
-                        choices=(CAMPAIGNS:=("2016APV", "2016", "2017", "2018",)),)
     parser.add_argument("--mass", type=int, nargs="+", required=False,
                         choices=(MASSES:=[250, 260, 270, 280, 300, 320, 350, 400, 450, 500,
                                  550, 600, 650, 700, 750, 800, 850, 900, 1000, 1250,
@@ -452,64 +399,62 @@ def main():
     parser.add_argument("--validation_results_dir", type=str,
                         default="/tmp/jwulff/inference/validation_results/", help="Directory to store validation results.")
     parser.add_argument("--ignore-processes", nargs='*', default=["data_obs", "QCD"], help="Processes to ignore in the datacard.")
-    parser.add_argument("--n-threads", type=int, default=4, help="Number of threads for parallel processing.")
+    parser.add_argument(
+        "--max-processes",
+        type=int,
+        default=4,
+        help="Maximum number of worker processes.",
+    )
     parser.add_argument("--only-remove", action="store_true", help="Only remove nuisances, do not convert shape to lnN.")
     parser.add_argument("--update-mode", choices=["conservative", "loose", "smoothen"], default="conservative",
                         help="Choose update mode: 'conservative' (default), 'loose' or 'smoothen'.")
     parser.add_argument("--threshold", type=float, default=0.01,
                         help="Threshold for non-genuine shape detection (only used in loose mode).")
     args = parser.parse_args()
-
-    all_stats = {}
-
-    def process_one(process_args):
-        datacard_path, spin, mass = process_args
-        datacard = Datacard(datacard=Path(datacard_path),
-                            ignore_processes=args.ignore_processes)
-        if args.update_mode == "conservative":
-            stats = conservative_update(datacard,
-                                        Path(args.output_path) / "conservative" ,
-                                        args.validation_results_dir,
-                                        only_remove=args.only_remove)
-        elif args.update_mode == "loose": 
-            stats = loose_update(datacard,
-                                 Path(args.output_path) / "loose" ,
-                                 threshold=args.threshold)
-        elif args.update_mode == "smoothen":
-            fix_large_shapes(datacard,
-                             Path(args.output_path) / "smoothen")
-            stats = {"status": "shapes checked and smoothened if necessary"}
-        return str(datacard_path), stats
+    
+    if not os.path.exists(args.output_path):
+        os.makedirs(args.output_path)
     
     # get the datacard paths
     datacard_paths = []
-    for spin in args.spin:
-        for mass in args.mass:
-            paths = list(Path(args.datacard_path).glob(f"datacard_cat_{args.campaign}_*_spin_{spin}_mass_{mass}.txt"))
-            if not paths:
-                print(f"No datacards found for campaign {args.campaign}, spin {spin} and mass {mass} in {args.datacard_path}")
+    for mass in args.mass:
+        paths = list(Path(args.datacard_path).glob(f"datacard_cat_*_spin_*_mass_{mass}.txt"))
+        if not paths:
+            print(f"No datacards found for mass {mass} in {args.datacard_path}")
+            continue
+        datacard_paths.extend(paths)
+
+    campaigns = sorted({re.search(r"datacard_cat_([^_]+)_", path.name).group(1) for path in datacard_paths})
+    spins = sorted({re.search(r"spin_(\d+)", path.name).group(1) for path in datacard_paths})
+    print(
+        f"Found {len(datacard_paths)} datacards for campaigns {campaigns}, "
+        f"spins {spins} and mass {args.mass} in {args.datacard_path}"
+    )
+    with ProcessPoolExecutor(max_workers=args.max_processes) as executor:
+        future_to_datacard = {
+            executor.submit(
+                process_datacard_wrapper,
+                str(path),
+                args.ignore_processes,
+                args.update_mode,
+                args.output_path,
+                args.validation_results_dir,
+                args.only_remove,
+                args.threshold,
+            ): str(path)
+            for path in datacard_paths
+        }
+        for future in tqdm(
+            as_completed(future_to_datacard),
+            total=len(future_to_datacard),
+            desc="Processing datacards",
+        ):
+            datacard_path = future_to_datacard[future]
+            try:
+                future.result()
+            except Exception as e:
+                print(f"[ERROR] Error while processing datacard {datacard_path}: {e}")
                 continue
-            datacard_paths.extend(paths)
-
-    proc_args = [(str(path), re.search(r"spin_(\d+)", path.name).group(1),
-               re.search(r"mass_(\d+)", path.name).group(1)) for path in datacard_paths]
-
-    print(f"Found {len(datacard_paths)} ({len(datacard_paths)/(len(args.mass)*len(args.spin))} per hypothesis) datacards for campaign {args.campaign}, spin {args.spin} and mass {args.mass} in {args.datacard_path}")
-    #with ThreadPoolExecutor(max_workers=args.n_threads) as executor:
-    with Manager() as manager:
-        pool = Pool(processes=args.n_threads)
-        results = thread_map(process_one, proc_args, max_workers=args.n_threads, desc="Processing datacards")
-        pool.close()
-        pool.join()
-
-    for datacard_path, stats in results:
-        all_stats[datacard_path] = stats
-
-    # Write all stats to JSON
-    json_file = f"{args.output_path}/{args.update_mode}/update_stats_s_{'-'.join(map(str,args.spin))}_m_{'-'.join(map(str,args.mass))}.json"
-    with open(json_file, "a") as f:
-        json.dump(all_stats, f, indent=2)
-    print(f"\nWrote statistics for {len(all_stats)} datacards to {json_file}") 
 
 if __name__ == "__main__":
     main()
