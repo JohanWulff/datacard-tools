@@ -1,0 +1,107 @@
+# coding: utf-8
+
+from datacard_parser import Datacard
+
+from concurrent.futures import ProcessPoolExecutor, as_completed
+
+import uproot
+import numpy as np
+import click
+import tqdm
+
+
+def check_hists(datacard: Datacard,) -> dict:
+                  
+    """
+    Checks for non-finite values (NaN) and yields below 1e-5 in the histograms of a datacard. 
+    Args:
+        datacard (Datacard): The datacard to check for NaN values.
+    """
+
+    problematic_shapes = {}
+    dirname = datacard.dirname
+    with uproot.open(datacard.shapes_file) as f:
+        for key in datacard.get_shape_keys():
+            shape = f[f"{dirname}/{key}"].to_hist()
+            values = shape.values()
+            variances = shape.variances()
+            if ~np.isfinite(values).any() or ~np.isfinite(variances).any():
+                problematic_shapes[key] = {
+                    "values": values,
+                    "variances": variances
+                }
+            if (values < 1e-6).any():
+                problematic_shapes[key] = {
+                    "values": values,
+                    "variances": variances
+                }
+        for key in datacard.get_nominal_keys():
+            nominal = f[f"{dirname}/{key}"].to_hist()
+            values = nominal.values()
+            variances = nominal.variances()
+            if ~np.isfinite(values).any() or ~np.isfinite(variances).any():
+                problematic_shapes[key] = {
+                    "values": values,
+                    "variances": variances
+                }
+            if (values < 1e-6).any():
+                problematic_shapes[key] = {
+                    "values": values,
+                    "variances": variances
+                }
+    return problematic_shapes
+
+
+def futures_wrapper(datacard_path: str) -> dict:
+    datacard = Datacard(datacard_path, ignore_processes=["data_obs"])
+    return check_hists(datacard)
+        
+    
+@click.command(help="Check for nonfinite values and yields < 1e-5 in the datacard.")
+@click.argument("datacards", nargs=-1, required=True)
+@click.option(
+    "--max-processes",
+    type=click.IntRange(min=1),
+    default=4,
+    show_default=True,
+    help="Maximum number of worker processes.",
+)
+def main(datacards: tuple[str, ...], max_processes: int):
+    click.echo("[INFO] Found {} datacards.".format(len(datacards)))
+    click.echo("[INFO] Using max_processes={}.".format(max_processes))
+
+    nan_shapes = {}
+    with ProcessPoolExecutor(max_workers=max_processes) as executor:
+        future_to_datacard = {
+            executor.submit(futures_wrapper, datacard_path): datacard_path
+            for datacard_path in datacards
+        }
+        for future in tqdm.tqdm(
+            as_completed(future_to_datacard),
+            total=len(future_to_datacard),
+            desc="Checking datacards",
+        ):
+            datacard_path = future_to_datacard[future]
+            try:
+                result = future.result()
+                if result:
+                    nan_shapes[datacard_path] = result
+            except Exception as e:
+                print("[ERROR] Error occurred while checking datacard {}: {}".format(datacard_path, e))
+                continue
+
+    if nan_shapes:
+        for datacard_path, datacard_nan_shapes in nan_shapes.items():
+            print("[WARNING] Found NaN values in the following shapes for datacard {}:".format(datacard_path))
+            for shape_key, shape_info in datacard_nan_shapes.items():
+                print("  - Shape key: {}".format(shape_key))
+                print("    Values: {}".format(shape_info["values"]))
+                print("    Variances: {}".format(shape_info["variances"]))
+
+
+if __name__ == "__main__":
+    main()
+    
+    
+
+    
