@@ -296,6 +296,20 @@ class Datacard:
         else:
             return {nuisance: shapes_file_handle[nuisance].to_hist() for nuisance in nuisances}
 
+    def get_nom_up_down(self, nuisance: str, process: str, shapes_file_handle=None) -> Dict[str, Hist]: 
+        """
+        Get the shape histograms for a nuisance and process.
+        Returns a tuple of (nominal_hist, up_hist, down_hist) as values. 
+        """
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                return (f[self.dirname][f"{process}"].to_hist(),
+                        f[self.dirname][f"{process}__{nuisance}Up"].to_hist(),
+                        f[self.dirname][f"{process}__{nuisance}Down"].to_hist())
+        else:
+            return (shapes_file_handle[self.dirname][f"{process}"].to_hist(),
+                    shapes_file_handle[self.dirname][f"{process}__{nuisance}Up"].to_hist(),
+                    shapes_file_handle[self.dirname][f"{process}__{nuisance}Down"].to_hist())
     
     def get_shape_keys(self, shapes_file_handle=None) -> List[str]:
         """
