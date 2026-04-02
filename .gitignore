@@ -6,3 +6,5 @@ __pycache__/
 *.json
 tryout_sym.py
 new_remodel_plots
+*.pdf
+
