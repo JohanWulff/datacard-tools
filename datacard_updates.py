@@ -17,14 +17,23 @@ import hist
 
 
 def get_rate_string(nominal_yield, up_rate, down_rate):
-    if nominal_yield <= 1e-3:
+    if nominal_yield < 1e-4:
         return "-"
     if np.abs(1 - up_rate) < 0.01 and np.abs(1 - down_rate) < 0.01:
         return "-"
-    elif np.abs(up_rate - down_rate) < 0.01:
-        return f"{np.max((down_rate, up_rate)):.3f}"
     else:
-        return f"{down_rate:.3f}/{up_rate:.3f}"
+        abs_rate_up = np.abs(up_rate - 1)
+        abs_rate_down = np.abs(down_rate - 1)
+        rate_diff = np.abs(abs_rate_up - abs_rate_down)
+        max_rate = np.max((abs_rate_up, abs_rate_down))
+        if rate_diff < 0.01 and max_rate <= 0.2:
+            # if the up and down rates are within 1% of each other and the maximum rate is within 20%, we can use a symmetric lnN
+            return f"{max_rate + 1:.3f}"
+        else:
+            # large symmetric lnN's become inaccurate, so we explicitly use asym lnN
+            # (see "lnN" section here:
+            # https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/latest/part2/settinguptheanalysis/#a-simple-counting-experiment)
+            return f"{down_rate:.3f}/{up_rate:.3f}"
 
 
 def plot_variation(
@@ -101,19 +110,19 @@ def plot_variation(
     plt.close() 
 
     
-def can_remodel_as_rate(rates: tuple[float, float], nominal_yield: float, min_yield: float = 1e-3) -> bool:
+def can_remodel_as_rate(rates: tuple[float, float], nominal_yield: float, min_yield: float = 1e-4) -> bool:
     """
     Check if a nuisance can be safely remodeled as a rate nuisance.
     
     Guards:
-    1. Nominal yield must be > min_yield (default 1e-3)
+    1. Nominal yield must be > min_yield (default 1e-4 -> same as datacard minimum yield threshold) 
     2. Rate factors must be within valid lnN range (0.01 to 1.99)
     
     Returns: True if safe to remodel, False otherwise
     """
     up_rate, down_rate = rates
     
-    # commented out becuase for now we switch off all nuisances for processes with nominal yield <= 1e-3, 
+    # commented out becuase for now we switch off all nuisances for processes with nominal yield < 1e-4, 
     # see get_rate_string()
     ## Guard 1: Check nominal yield
     #if nominal_yield <= min_yield:
@@ -210,7 +219,7 @@ def conservative_update(
     If only_remove is True, only remove nuisances, do not convert to lnN.
     small shape effects are identified via ValidateDatacards.py smallShapeEff output.
     If plot_output_dir is provided, also plots large normalization effects from ValidateDatacards.py.
-    Nuisances with a nominal yield <= 1e-3 in all affected processes are considered empty and are dropped 
+    Nuisances with a nominal yield < 1e-4 in all affected processes are considered empty and are dropped 
     """
 
     def parse_validation_section(validation_json: dict, section_name: str) -> dict[str, dict]:
@@ -248,8 +257,8 @@ def conservative_update(
         # Get nominal yields for all processes once
         nominal_yields = datacard.get_nominal_yields(f)
 
-        # considering a process as empty if the summed nominal yield is <= 1e-3
-        empty_yields = {proc for proc, yield_ in nominal_yields.items() if yield_ <= 1e-3}
+        # considering a process as empty if the summed nominal yield is < 1e-4
+        empty_yields = {proc for proc, yield_ in nominal_yields.items() if yield_ < 1e-4}
 
         if not small_shape_effects:
             if not large_norm_effects:
