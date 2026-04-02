@@ -19,7 +19,7 @@ class Datacard:
     Dataclass to hold information about a datacard.
     """
     datacard: Path
-    ignore_processes: List = field(default_factory=lambda: ["data_obs", "QCD"]) 
+    ignore_processes: List = field(default_factory=lambda: ["data_obs",]) 
 
     processes: list = field(init=False, default=None)
     all_processes: list = field(init=False, default=None)
@@ -182,12 +182,40 @@ class Datacard:
 
             # take the integral of the histograms
             nominal_sum = nominal_hist.sum().value
-            if nominal_sum <= 1e-6:
-                print(f"Warning: Nominal value for process {process} is too small ({nominal_sum}), skipping.")
             up_rate = up_hist.sum().value / nominal_sum
             down_rate = down_hist.sum().value / nominal_sum 
             rates[process] = (up_rate, down_rate)
         return rates
+
+    def get_nominal_yields(self, shapes_file_handle=None) -> dict[str, float]:
+        """
+        Get nominal histogram integral (yield) for each process.
+        Returns dict mapping process name -> nominal yield.
+        Optionally, pass an open shapes_file_handle to avoid reopening.
+        """
+        nominal_yields = {}
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                for process in self.processes:
+                    if process in self.ignore_processes:
+                        continue
+                    try:
+                        nominal_hist = f[self.dirname][f"{process}"].to_hist()
+                        nominal_yields[process] = nominal_hist.sum().value
+                    except KeyError:
+                        # Process not found in shapes file
+                        nominal_yields[process] = 0.0
+        else:
+            for process in self.processes:
+                if process in self.ignore_processes:
+                    continue
+                try:
+                    nominal_hist = shapes_file_handle[self.dirname][f"{process}"].to_hist()
+                    nominal_yields[process] = nominal_hist.sum().value
+                except KeyError:
+                    # Process not found in shapes file
+                    nominal_yields[process] = 0.0
+        return nominal_yields
 
     def get_rates(self, nuisance: str, shapes_file_handle=None) -> dict[str, Tuple[float, float]]:
         """
@@ -214,7 +242,7 @@ class Datacard:
             raise NotImplementedError(f"Nuisance {nuisance} is a mixed nuisance, not implemented yet.")
         return rates
     
-    def validate(self, validation_results_dir: Path) -> str:
+    def validate(self, validation_results_dir: Path, check_uncert_over: float) -> str:
         """
         Validate the datacard using the ValidateDatacards.py script.
         Returns the path to the validation results JSON file.
@@ -229,6 +257,8 @@ class Datacard:
         # Construct the command to run the script
         command = ["ValidateDatacards.py", self.datacard, "--jsonFile", f"{validation_results_dir}/{self.datacard.stem}.json"]
         # Run the command and capture the output
+        if check_uncert_over is not None:
+            command.extend(["--checkUncertOver", str(check_uncert_over)])
         try:
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             # Check if the command was successful
