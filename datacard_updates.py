@@ -291,7 +291,12 @@ def conservative_update(
                     if all(rate == "-" for rate in rate_strings.values()):
                         nuisance_type = "shape"
                     else:
+                        # this case is more problematic, because combine only allows asym entries for lnN's
+                        # so if any of the rate strings will be asymmetric, we have to keep the nuisance as a shape, even for the processes that could be remodeled as lnN
                         nuisance_type = "shape?"
+                        if any("/" in rate for rate in rate_strings.values()):
+                            # skip update for this nuisance and keep it as a shape
+                            continue
                     rate_strings.update({process: "1" for process in keep_processes})
                     modifications[nuisance] = (nuisance_type, rate_strings)
                     # Only remove shapes if we actually remodeled the nuisance
@@ -352,9 +357,11 @@ def conservative_update(
     # In conservative mode, plot largeNormEff entries to be able to cross-check later 
     if large_norm_effects and plot_output_dir:
         plot_dir_for_large_norm = Path(plot_output_dir) / f"spin_{datacard.spin}_mass_{datacard.mass}"
-        # Plot only largeNormEff entries that affect empty-nominal bins
+        # Plot only largeNormEff entries that affect non-empty nominals 
         for nuisance in large_norm_effects:
             for process in large_norm_effects[nuisance].keys():
+                if process in empty_yields:
+                    continue
                 #print(
                 #    f"Plotting largeNormEff nuisance {nuisance} for process {process} in datacard {datacard.datacard.name}..."
                 #)
