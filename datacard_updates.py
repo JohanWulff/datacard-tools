@@ -1,26 +1,132 @@
 from datacard_parser import Datacard
 
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 import shutil
-
 import json
+import subprocess
+import tempfile
+
 import numpy as np
 import re
 import uproot
 import os
 
 from hist import Hist
+import hist
 
 
-def get_rate_string(up_rate, down_rate):
+def get_rate_string(nominal_yield, up_rate, down_rate):
+    if nominal_yield <= 1e-3:
+        return "-"
     if np.abs(1 - up_rate) < 0.01 and np.abs(1 - down_rate) < 0.01:
         return "-"
-    # ignoring this case for now in order to avoid that shape/ bug with asym lnN's
-    # elif np.abs(1-up_rate) > 0.01 and np.abs(1-down_rate) > 0.01:
-    #   return f"{down_rate:.3f}/{up_rate:.3f}"
-    else:
+    elif np.abs(up_rate - down_rate) < 0.01:
         return f"{np.max((down_rate, up_rate)):.3f}"
+    else:
+        return f"{down_rate:.3f}/{up_rate:.3f}"
+
+
+def plot_variation(
+    datacard: Datacard,
+    nuisance: str,
+    process: str,
+    output_dir: Path,
+    y_log: bool = True,
+    binning: str = "numbers",
+) -> bool:
+    #plot_arg = f"{datacard.dirname},{process},{nuisance}"
+    #plot_cmd = [
+    #    "plot_datacard_shapes.py",
+    #    str(datacard.datacard),
+    #    "--y-log",
+    #    "--binning",
+    #    "numbers",
+    #    "--directory",
+    #    str(output_dir),
+    #    plot_arg,
+    #]
+    ##print(f"Running plotting command: {' '.join(plot_cmd)}")
+    #result = subprocess.run(plot_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    #if result.returncode != 0:
+    #    print(
+    #        f"Warning: plotting failed for {plot_arg} in {datacard.datacard.name}: "
+    #        f"{result.stderr.strip()}"
+    #    )
+    #    return False
+    #return True
+
+    def equal_width_hist(h: Hist) -> Hist:
+        if np.all(h.axes[0].widths == h.axes[0].widths[0]):
+            return h
+        else:
+            new_hist = Hist(hist.axis.Regular(h.axes[0].size,
+                                    h.axes[0].edges[0],
+                                    h.axes[0].edges[-1], name=h.axes[0].name), storage=h.storage_type)
+            new_hist.view()[:] = h.view()
+            return new_hist
+
+
+    import matplotlib.pyplot as plt
+    import mplhep as hep
+    hep.style.use("CMS")
+    
+    with uproot.open(datacard.shapes_file) as f:
+        key_up = f"{datacard.dirname}/{process}__{nuisance}Up"
+        key_down = f"{datacard.dirname}/{process}__{nuisance}Down"
+        if key_up not in f or key_down not in f:
+            print(f"Warning: shape keys {key_up} or {key_down} not found in shapes file for datacard {datacard.datacard.name}")
+            return False
+        hist_up = f[key_up].to_hist()
+        hist_down = f[key_down].to_hist()
+        nominal_hist = f[f"{datacard.dirname}/{process}"].to_hist()
+    if binning == "numbers":
+        hist_up = equal_width_hist(hist_up)
+        hist_down = equal_width_hist(hist_down)
+        nominal_hist = equal_width_hist(nominal_hist)
+    change_up, change_down = hist_up.sum().value/nominal_hist.sum().value, hist_down.sum().value/nominal_hist.sum().value
+    fig, ax = plt.subplots()
+    label_factor_up = f"{change_up:.1f}" if np.abs(change_up - 1) > 0.01 else "1"
+    label_factor_down = f"{change_down:.1f}" if np.abs(change_down - 1) > 0.01 else "1"
+    hep.histplot(nominal_hist.values(), histtype="step", label=f"Nominal, Yield {nominal_hist.sum().value:.1e}", ax=ax, color="black")
+    hep.histplot(hist_up.values(), histtype="step", label=f"{nuisance.replace('_', '-')} Up, x{label_factor_up}", ax=ax, color="C0")
+    hep.histplot(hist_down.values(), histtype="step", label=f"{nuisance.replace('_', '-')} Down, x{label_factor_down}", ax=ax, color="C1")
+    ax.set_title(f"{process.replace('_', '-')} - {nuisance.replace('_', '-')}")
+    ax.legend()
+    ax.set_ylabel("Events")
+    ax.set_yscale("log" if y_log else "linear")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    plt.tight_layout()
+    plt.savefig(output_dir / f"{datacard.dirname}__{process}__{nuisance}.pdf")
+    plt.close() 
+
+    
+def can_remodel_as_rate(rates: tuple[float, float], nominal_yield: float, min_yield: float = 1e-3) -> bool:
+    """
+    Check if a nuisance can be safely remodeled as a rate nuisance.
+    
+    Guards:
+    1. Nominal yield must be > min_yield (default 1e-3)
+    2. Rate factors must be within valid lnN range (0.01 to 1.99)
+    
+    Returns: True if safe to remodel, False otherwise
+    """
+    up_rate, down_rate = rates
+    
+    # commented out becuase for now we switch off all nuisances for processes with nominal yield <= 1e-3, 
+    # see get_rate_string()
+    ## Guard 1: Check nominal yield
+    #if nominal_yield <= min_yield:
+    #    return False
+    
+    # Guard 2: Check if rate factors are within valid lnN range
+    max_rate = max(up_rate, down_rate)
+    
+    # keep as a shape if beyond a factor of 1.99
+    if max_rate > 1.99:
+        return False
+    
+    return True
 
 
 def get_non_genuine_shapes(datacard, threshold, shapes_file_handle=None) -> List[str]:
@@ -47,7 +153,7 @@ def get_non_genuine_shapes(datacard, threshold, shapes_file_handle=None) -> List
 def replace_nuisance_lines(
     old_card: Datacard,
     new_card: Path,
-    modifications: list[tuple[str, str, dict[str, str]]],
+    modifications: dict[str, tuple[str, dict[str, str]]], 
 ) -> None:
     """
     Apply multiple nuisance line replacements in one go.
@@ -61,7 +167,7 @@ def replace_nuisance_lines(
     with open(old_card.datacard, "r") as f:
         lines = f.readlines()
 
-    for nuisance, nuisance_type, new_entries in modifications:
+    for nuisance, (nuisance_type, new_entries) in modifications.items():
         nuisance_lines = [i for i, l in enumerate(lines) if l.startswith(nuisance + " ")]
         if len(nuisance_lines) == 0:
             raise ValueError(f"Nuisance {nuisance} not found in datacard {old_card.datacard}")
@@ -95,13 +201,41 @@ def replace_nuisance_lines(
 def conservative_update(
     datacard: Datacard,
     output_path: Path,
-    validation_results_dir: str,
-    only_remove: bool = False,
-) -> None:
+    validation_results_dir: Optional[str] = None,
+    check_uncert_over: float = 2.0,
+    plot_output_dir: Optional[str] = None,
+) -> dict:
     """
     Update the datacard with non-genuine shape nuisances modelled as rate nuisances.
     If only_remove is True, only remove nuisances, do not convert to lnN.
+    small shape effects are identified via ValidateDatacards.py smallShapeEff output.
+    If plot_output_dir is provided, also plots large normalization effects from ValidateDatacards.py.
+    Nuisances with a nominal yield <= 1e-3 in all affected processes are considered empty and are dropped 
     """
+
+    def parse_validation_section(validation_json: dict, section_name: str) -> dict[str, dict]:
+        """
+        just removes the "cat_20xx_channel_category_suffix_os_iso" key from the dict
+        """
+        section = validation_json.get(section_name, {})
+        if not section:
+            return {}
+        first_nuisance = next(iter(section))
+        if not section[first_nuisance]:
+            return {}
+        first_cat = next(iter(section[first_nuisance]))
+        return {nuisance: section[nuisance].get(first_cat, {}) for nuisance in section}
+
+    # Initialize plot stats and dropped nuisances tracking
+    n_updated_nuisances = 0
+    dropped_nuisances = []
+    validation_json_path = datacard.validate(validation_results_dir,
+                                             check_uncert_over)
+    with open(validation_json_path, "r") as vf:
+        validation_results_json = json.load(vf)
+
+    small_shape_effects = parse_validation_section(validation_results_json, "smallShapeEff")
+    large_norm_effects = parse_validation_section(validation_results_json, "largeNormEff")
 
     with uproot.open(datacard.shapes_file) as f:
         cnames = f.classnames()
@@ -110,76 +244,92 @@ def conservative_update(
             for key, cname in cnames.items()
             if key.startswith(datacard.dirname) and cname == "TH1D"
         }
-        validation_results = datacard.validate(validation_results_dir)
 
-        if not validation_results:
-            raise ValueError(f"Validation failed for datacard {datacard.datacard.name}. Cannot proceed with update.")
+        # Get nominal yields for all processes once
+        nominal_yields = datacard.get_nominal_yields(f)
 
-        with open(validation_results, "r") as vf:
-            validation_results_json = json.load(vf)
+        # considering a process as empty if the summed nominal yield is <= 1e-3
+        empty_yields = {proc for proc, yield_ in nominal_yields.items() if yield_ <= 1e-3}
 
-        if "smallShapeEff" not in validation_results_json:
-            print(f"No small shape effects found for datacard {datacard.datacard.name}. No update necessary.")
-            output_datacard_path = Path(output_path) / datacard.datacard.name
-            shutil.copy(datacard.datacard, output_datacard_path)
-            output_shapes_file = Path(output_path) / datacard.shapes_file.name
-            shutil.copy(datacard.shapes_file, output_shapes_file)
-            return {
-                "updated_nuisances": {},
-                "n_updated_nuisances": 0,
-                "removed_shape_keys": [],
-            }
+        if not small_shape_effects:
+            if not large_norm_effects:
+                if len(empty_yields) == 0:
+                    print((f"No empty nominal processes and no large/small "
+                          f"effects found for datacard {datacard.datacard.name}. No modifications applied."))
+                    output_datacard_path = Path(output_path) / datacard.datacard.name
+                    shutil.copy(datacard.datacard, output_datacard_path)
+                    output_shapes_file = Path(output_path) / datacard.shapes_file.name
+                    shutil.copy(datacard.shapes_file, output_shapes_file)
+                    return {
+                        "n_updated_nuisances": 0,
+                        "removed_shape_keys": [],
+                        "dropped_nuisances": [],
+                    }
 
-        small_shape_effects = validation_results_json["smallShapeEff"]
-        cat_name = next(iter(small_shape_effects[next(iter(small_shape_effects))]))
-        small_shape_effects = {nuisance: small_shape_effects[nuisance][cat_name] for nuisance in small_shape_effects}
-
-        modifications = []
+        modifications = {}
         remove_unused_shapes = set()
         for nuisance in small_shape_effects:
-            if len(small_shape_effects[nuisance]) == len(datacard.processes):
-                rates = datacard.get_rates(nuisance, shapes_file_handle=f)
-                rates = {process: get_rate_string(*rates[process]) for process in rates}
-                if all(rate == "-" for rate in rates.values()):
-                    nuisance_type = "shape"
+            # Check if all processes can be remodeled as rates
+            rates = datacard.get_rates(nuisance, shapes_file_handle=f)
+            processes_to_remodel = set([k for k in small_shape_effects[nuisance].keys() if can_remodel_as_rate(rates[k], nominal_yields.get(k, 0))])
+            if processes_to_remodel:
+                if len(processes_to_remodel) == len(datacard.processes):
+                    rate_strings = {process: get_rate_string(nominal_yields[process], *rates[process]) for process in datacard.processes}
+                    if all(rate == "-" for rate in rate_strings.values()):
+                        dropped_nuisances.append(nuisance)
+                    # all processes can be remodeled as rates, so we remodel the entire nuisance as lnN
+                    modifications[nuisance] = ("lnN", rate_strings)
+                    # Only remove shapes if we actually remodeled the nuisance
+                    remove_unused_shapes.update({
+                        f"{datacard.dirname}/{p}_{nuisance}{ud}"
+                        for p in processes_to_remodel 
+                        for ud in ["Up", "Down"]
+                    })
+                elif len(processes_to_remodel) < len(datacard.processes):
+                    keep_processes = set(datacard.processes) - processes_to_remodel
+                    rate_strings = {process: get_rate_string(nominal_yields[process], *rates[process]) for process in processes_to_remodel}
+                    if all(rate == "-" for rate in rate_strings.values()):
+                        nuisance_type = "shape"
+                    else:
+                        nuisance_type = "shape?"
+                    rate_strings.update({process: "1" for process in keep_processes})
+                    modifications[nuisance] = (nuisance_type, rate_strings)
+                    # Only remove shapes if we actually remodeled the nuisance
+                    remove_unused_shapes.update({
+                        f"{datacard.dirname}/{p}_{nuisance}{ud}"
+                        for p in processes_to_remodel 
+                        for ud in ["Up", "Down"]
+                    })
                 else:
-                    nuisance_type = "lnN"
-                    if only_remove:
-                        continue
-                modifications.append((nuisance, nuisance_type, rates))
-            elif len(small_shape_effects[nuisance]) < len(datacard.processes):
-                rates = datacard.get_rates(nuisance, shapes_file_handle=f)
-                keep_processes = set(datacard.processes) - set(small_shape_effects[nuisance].keys())
-                rates = {process: get_rate_string(*rates[process]) for process in small_shape_effects[nuisance].keys()}
-                if all(rate == "-" for rate in rates.values()):
-                    nuisance_type = "shape"
-                else:
-                    nuisance_type = "shape?"
-                    continue
-                rates.update({process: "1" for process in keep_processes})
-                modifications.append((nuisance, nuisance_type, rates))
-            else:
-                raise ValueError(
-                    f"Unexpected number of processes for nuisance {nuisance} in datacard {datacard.datacard.name}"
-                )
-
-            remove_unused_shapes = {
-                f"{datacard.dirname}/{p}_{nuisance}{ud}"
-                for p in small_shape_effects[nuisance].keys()
-                for ud in ["Up", "Down"]
-            }
+                    raise ValueError(
+                        f"Unexpected number of processes for nuisance {nuisance} in datacard {datacard.datacard.name}"
+                    )
+                n_updated_nuisances += 1
         keep_keys -= remove_unused_shapes
+    
+        #for nuisance in large_norm_effects:
+        #    processes = large_norm_effects[nuisance].keys()
+        #    processes_to_drop = set(processes) & empty_yields
+        #    if processes_to_drop:
+        #        if nuisance in modifications:
+        #            modifications[nuisance][1].update({process: "-" for process in processes_to_drop})
+        #        else:
+        #            modifications[nuisance] = ("shape", {process: "-" for process in processes_to_drop})
+        #        n_updated_nuisances += 1
+
+        if empty_yields:
+            for nuisance in datacard.get_nuisance_types():
+                if nuisance in modifications:
+                    modifications[nuisance][1].update({process: "-" for process in empty_yields})
+                else:
+                    process_entries = datacard.get_nuisance_line(nuisance)
+                    process_entries.update({process: "-" for process in empty_yields})
+                    modifications[nuisance] = ("shape", process_entries)
+                n_updated_nuisances += 1
+
 
         if modifications:
             replace_nuisance_lines(datacard, output_path, modifications)
-
-        updated_nuisances = {
-            nuisance: {
-                "type": nuisance_type,
-                "entries": entries,
-            }
-            for nuisance, nuisance_type, entries in modifications
-        }
 
         output_shapes_file = Path(output_path) / datacard.shapes_file.name
         shutil.copy(datacard.shapes_file, output_shapes_file)
@@ -188,7 +338,7 @@ def conservative_update(
                 hists = datacard.get_shape_hists(nuisances=list(keep_keys), shapes_file_handle=f)
                 for key, hist in hists.items():
                     try:
-                        hist = update_bugged_hist(hist)
+                        #hist = update_bugged_hist(hist)
                         new_shapes_file[key] = hist
                     except ValueError:
                         print(
@@ -199,264 +349,20 @@ def conservative_update(
         else:
             shutil.copy(datacard.shapes_file, output_shapes_file)
 
-        return {
-            "updated_nuisances": updated_nuisances,
-            "n_updated_nuisances": len(updated_nuisances),
-            "removed_shape_keys": sorted(remove_unused_shapes),
-        }
+    # In conservative mode, plot largeNormEff entries to be able to cross-check later 
+    if large_norm_effects and plot_output_dir:
+        plot_dir_for_large_norm = Path(plot_output_dir) / f"spin_{datacard.spin}_mass_{datacard.mass}"
+        # Plot only largeNormEff entries that affect empty-nominal bins
+        for nuisance in large_norm_effects:
+            for process in large_norm_effects[nuisance].keys():
+                #print(
+                #    f"Plotting largeNormEff nuisance {nuisance} for process {process} in datacard {datacard.datacard.name}..."
+                #)
+                plot_variation(datacard, nuisance, process, plot_dir_for_large_norm)
 
-
-def update_bugged_hist(hist: Hist) -> None:
-    hist_vals, hist_vars = hist.values(), hist.variances()
-    if not np.all(np.isfinite(hist_vals)):
-        raise ValueError("Found non-finite values in histogram.")
-    if not np.all(np.isfinite(hist_vars)):
-        print(f"Warning: Found non-finite bin-errors in histogram {hist}")
-        hist_vals[~np.isfinite(hist_vals)] = 1e-5
-        hist_vars[~np.isfinite(hist_vars)] = 1e-6
-    if np.any(mask := (hist_vals < 1e-5)):
-        hist_vals[mask] = 1e-5
-        hist_vars[mask] = 1e-6
-    elif np.any(mask := (hist_vars < 1e-6)):
-        hist_vars[mask] = 1e-6
-    else:
-        return hist
-    new_hist = Hist(hist.axes[0], storage=hist.storage_type())
-    new_hist.view().value = hist_vals
-    new_hist.view().variance = hist_vars
-    return new_hist
-
-
-def loose_update(
-    datacard: Datacard,
-    output_path: Path,
-    threshold: float = 0.01,
-) -> None:
-    """
-    Update the datacard with non-genuine shape nuisances modelled as rate nuisances.
-    This is a more relaxed version of conservative_update, which does not check for small shape effects.
-    """
-
-    nuisance_types_before = datacard.get_nuisance_types()
-    with uproot.open(datacard.shapes_file) as f:
-        cnames = f.classnames()
-        keep_keys = {
-            re.sub(";\d", "", key)
-            for key, cname in cnames.items()
-            if key.startswith(datacard.dirname) and cname == "TH1D"
-        }
-        shape_nuisances = [n for n in nuisance_types_before if nuisance_types_before[n] == "shape"]
-        modifications = []
-        for nuisance in shape_nuisances:
-            rates = datacard.get_rates(nuisance, shapes_file_handle=f)
-            flagged = datacard.get_shape_vars(nuisance, threshold=threshold, shapes_file_handle=f)
-            if len(flagged) == datacard.processes:
-                rate_entries = {process: get_rate_string(*rates[process]) for process in rates}
-                modifications.append((nuisance, "lnN", rate_entries))
-            elif len(flagged) < len(datacard.processes):
-                keep_processes = set(datacard.processes) - set(flagged)
-                rate_entries = {process: get_rate_string(*rates[process]) for process in flagged}
-                if all(rate == "-" for rate in rate_entries.values()):
-                    nuisance_type = "shape"
-                else:
-                    nuisance_type = "shape?"
-                rate_entries.update({process: "1" for process in keep_processes})
-                modifications.append((nuisance, nuisance_type, rate_entries))
-
-            keep_keys -= {f"{datacard.dirname}/{process}_{nuisance}{ud}" for process in flagged for ud in ["Up", "Down"]}
-    replace_nuisance_lines(datacard, output_path, modifications)
-    output_shapes_file = Path(output_path) / datacard.shapes_file.name
-    shutil.copy(datacard.shapes_file, output_shapes_file)
-    with uproot.recreate(output_shapes_file) as new_shapes_file:
-        print(f"Keeping {len(keep_keys)}/{len(f.keys())} keys in shapes file {output_shapes_file}")
-        hists = datacard.get_shape_hists(keys=list(keep_keys), shapes_file_handle=f)
-        for key, hist in hists.items():
-            new_shapes_file[key] = hist
-
-    updated_nuisances = {
-        nuisance: {
-            "type": nuisance_type,
-            "entries": entries,
-        }
-        for nuisance, nuisance_type, entries in modifications
-    }
     return {
-        "updated_nuisances": updated_nuisances,
-        "n_updated_nuisances": len(updated_nuisances),
+        "n_updated_nuisances": n_updated_nuisances, 
+        "removed_shape_keys": sorted(remove_unused_shapes),
+        "dropped_nuisances": dropped_nuisances,
     }
 
-
-def fix_large_shapes(
-    datacard: Datacard,
-    output_path: Path,
-):
-    """
-    Check each shape effect for large shape effects and adjust them to neighboring bins if necessary.
-    A shape effect is considered unphysical if it's larger than 100 times the nominal value.
-    """
-
-    def smoothen(idx: int, variations: np.ndarray) -> np.ndarray:
-        """
-        helper to smoothen the variations
-        """
-        if len(variations) == 1:
-            return variations
-        if idx == 0 or idx == len(variations) - 1:
-            variations[idx] == variations[idx + 1] if idx == 0 else variations[idx - 1]
-        else:
-            variations[idx] = (variations[idx + 1] + variations[idx - 1]) / 2.0
-        return variations
-
-    changed = {}
-    with uproot.open(datacard.shapes_file) as f:
-        for nuisance in datacard.shape_nuisances:
-            for bkgd in datacard.background_processes:
-                up_var, down_var = datacard.get_bin_variations(nuisance, bkgd, shapes_file_handle=f)
-                problematic_bins_up = up_var > 100
-                problematic_bins_down = down_var < 1 / 100
-                if any(problematic_bins_up) or any(problematic_bins_down):
-                    bin_ids_up = np.where(problematic_bins_up)[0]
-                    diff = bin_ids_up[1:] - bin_ids_up[:-1]
-                    if np.any(diff == 1):
-                        print(
-                            f"Warning: Found neighboring large shape effects for nuisance {nuisance} and process {bkgd} "
-                            f"in datacard {datacard.datacard.name}"
-                        )
-                        print("Will not smoothen these bins.")
-                        print(f"Up variations: {up_var}")
-                        print(f"Down variations: {down_var}")
-                    bin_ids_down = np.where(problematic_bins_down)[0]
-                    diff = bin_ids_down[1:] - bin_ids_down[:-1]
-                    if np.any(diff == 1):
-                        print(
-                            f"Warning: Found neighboring large shape effects for nuisance {nuisance} and process {bkgd} "
-                            f"in datacard {datacard.datacard.name}"
-                        )
-                        print("Will not smoothen these bins.")
-                        print(f"Up variations: {up_var}")
-                        print(f"Down variations: {down_var}")
-                    corrected_up_var = np.copy(up_var)
-                    corrected_down_var = np.copy(down_var)
-                    for bins in problematic_bins_up:
-                        corrected_up_var = smoothen(bins, corrected_up_var)
-                    for bins in problematic_bins_down:
-                        corrected_down_var = smoothen(bins, corrected_down_var)
-
-                    up_shape = f[f"{datacard.dirname}/{bkgd}__{nuisance}Up"].to_hist()
-                    down_shape = f[f"{datacard.dirname}/{bkgd}__{nuisance}Down"].to_hist()
-                    nom_shape = f[f"{datacard.dirname}/{bkgd}"].to_hist()
-                    up_shape.view().value = nom_shape.values() * corrected_up_var
-                    down_shape.view().value = nom_shape.values() * corrected_down_var
-                    changed[f"{datacard.dirname}/{bkgd}_{nuisance}Up"] = up_shape
-                    changed[f"{datacard.dirname}/{bkgd}_{nuisance}Down"] = down_shape
-        if changed:
-            if not os.path.exists(output_path):
-                os.makedirs(output_path)
-            keep_keys = {
-                re.sub(";\d", "", key)
-                for key, cname in f.classnames().items()
-                if key.startswith(datacard.dirname) and cname == "TH1D"
-            } - set(changed.keys())
-            output_shapes_file = Path(output_path) / datacard.shapes_file.name
-            hists = datacard.get_shape_hists(nuisances=list(keep_keys), shapes_file_handle=f)
-            hists.update(changed)
-            with uproot.recreate(output_shapes_file) as new_shapes_file:
-                for key, hist in hists.items():
-                    new_shapes_file[key] = hist
-    return changed
-
-
-def smoothen_large_shape_effects(
-    datacard: Datacard,
-    output_path: Path,
-):
-    """
-    Check each shape effect for large shape effects and symmetrize them in case one variation hits the lower bound of 1e-5.
-    Also smoothens variations if they are larger than 1000 times the nominal value and no other bin variations
-    exceed this threshold. This is then likely just low statistics and one MC event.
-    """
-
-    def smoothen(nominal, up, down):
-        """
-        expecting nominal, up and down to be just one bin
-        """
-        assert isinstance(nominal, (int, float)) and isinstance(up, (int, float)) and isinstance(down, (int, float))
-
-        symmetric = (up > nominal) and (nominal > down)
-        symmetric_inverted = (down > nominal) and (nominal > up)
-
-        if symmetric:
-            alpha = up / nominal - 1
-            if alpha < 1:
-                down = max(1e-5, nominal * (1 - alpha))
-            else:
-                down = max(1e-5, nominal / alpha)
-        elif symmetric_inverted:
-            alpha = down / nominal - 1
-            if alpha < 1:
-                up = max(1e-5, nominal * (1 - alpha))
-            else:
-                up = max(1e-5, nominal / alpha)
-        else:
-            diff_up = np.abs(up - nominal)
-            diff_down = np.abs(down - nominal)
-            if diff_up < diff_down:
-                alpha = up / nominal - 1
-                if alpha < 1:
-                    down = max(1e-5, nominal * (1 - alpha))
-                else:
-                    down = max(1e-5, nominal / alpha)
-            else:
-                alpha = down / nominal - 1
-                if alpha < 1:
-                    up = max(1e-5, nominal * (1 - alpha))
-                else:
-                    up = max(1e-5, nominal / alpha)
-        return up, down
-
-    changed = {}
-    with uproot.open(datacard.shapes_file) as f:
-        for nuisance in datacard.shape_nuisances:
-            for bkgd in datacard.background_processes:
-                nominal, up, down = datacard.get_nom_up_down(nuisance, bkgd, shapes_file_handle=f)
-                nominal_vals = nominal.values()
-                up_vals = up.values()
-                down_vals = down.values()
-                if np.any(mask := down_vals <= 1e-5):
-                    for idx in np.where(mask)[0]:
-                        up_vals[idx], down_vals[idx] = smoothen(nominal_vals[idx], up_vals[idx], down_vals[idx])
-                if np.any(mask := up_vals <= 1e-5):
-                    for idx in np.where(mask)[0]:
-                        up_vals[idx], down_vals[idx] = smoothen(nominal_vals[idx], up_vals[idx], down_vals[idx])
-                mask = up_vals > 1000 * nominal_vals
-                for idx in np.where(mask)[0]:
-                    up_vals[idx], down_vals[idx] = smoothen(nominal_vals[idx], up_vals[idx], down_vals[idx])
-                mask = up_vals < nominal_vals / 1000
-                for idx in np.where(mask)[0]:
-                    up_vals[idx], down_vals[idx] = smoothen(nominal_vals[idx], up_vals[idx], down_vals[idx])
-                mask = down_vals > 1000 * nominal_vals
-                for idx in np.where(mask)[0]:
-                    up_vals[idx], down_vals[idx] = smoothen(nominal_vals[idx], up_vals[idx], down_vals[idx])
-                mask = down_vals < nominal_vals / 1000
-                for idx in np.where(mask)[0]:
-                    up_vals[idx], down_vals[idx] = smoothen(nominal_vals[idx], up_vals[idx], down_vals[idx])
-                up.view().value = up_vals
-                down.view().value = down_vals
-                changed[f"{datacard.dirname}/{bkgd}_{nuisance}Up"] = up
-                changed[f"{datacard.dirname}/{bkgd}_{nuisance}Down"] = down
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
-        keep_keys = {
-            re.sub(";\d", "", key)
-            for key, cname in f.classnames().items()
-            if key.startswith(datacard.dirname) and cname == "TH1D"
-        } - set(changed.keys())
-        output_shapes_file = Path(output_path) / datacard.shapes_file.name
-        hists = datacard.get_shape_hists(nuisances=list(keep_keys), shapes_file_handle=f)
-        hists.update(changed)
-        with uproot.recreate(output_shapes_file) as new_shapes_file:
-            for key, hist in hists.items():
-                new_shapes_file[key] = hist
-        output_datacard_path = Path(output_path) / datacard.datacard.name
-        shutil.copy(datacard.datacard, output_datacard_path)
-        return changed
