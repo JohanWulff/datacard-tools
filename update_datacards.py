@@ -1,7 +1,8 @@
 from datacard_parser import Datacard
-from datacard_updates import conservative_update, loose_update, smoothen_large_shape_effects
+from datacard_updates import conservative_update
 
 from pathlib import Path
+from typing import Optional
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from tqdm import tqdm
@@ -15,30 +16,19 @@ from datetime import datetime
 def process_datacard_wrapper(
     datacard_path: str,
     ignore_processes: list[str],
-    update_mode: str,
     output_path: str,
     validation_results_dir: str,
-    only_remove: bool,
-    threshold: float,
+    check_uncert_over: float,
+    plot_output_dir: Optional[str],
 ):
     datacard = Datacard(datacard=Path(datacard_path), ignore_processes=ignore_processes)
-    if update_mode == "conservative":
-        result = conservative_update(
-            datacard,
-            Path(output_path) / "conservative",
-            validation_results_dir,
-            only_remove=only_remove,
-        )
-    elif update_mode == "loose":
-        result = loose_update(datacard, Path(output_path) / "loose", threshold=threshold)
-    elif update_mode == "smoothen":
-        changed = smoothen_large_shape_effects(datacard, Path(output_path) / "smoothen")
-        result = {
-            "updated_shape_keys": sorted(changed.keys()),
-            "n_updated_shape_keys": len(changed),
-        }
-    else:
-        raise ValueError(f"Unsupported update mode: {update_mode}")
+    result = conservative_update(
+        datacard,
+        Path(output_path) / "conservative",
+        validation_results_dir=validation_results_dir,
+        check_uncert_over=check_uncert_over,
+        plot_output_dir=plot_output_dir,
+    )
 
     return datacard_path, result
 
@@ -83,7 +73,7 @@ def main():
         "--validation-results-dir",
         type=str,
         default="/tmp/jwulff/inference/validation_results/",
-        help="Directory to store validation results.",
+        help="Directory to store ValidateDatacards.py JSON output.",
     )
     parser.add_argument("--ignore-processes", nargs="*", default=["data_obs", "QCD"], help="Processes to ignore in the datacard.")
     parser.add_argument(
@@ -92,18 +82,17 @@ def main():
         default=4,
         help="Maximum number of worker processes.",
     )
-    parser.add_argument("--only-remove", action="store_true", help="Only remove nuisances, do not convert shape to lnN.")
     parser.add_argument(
-        "--update-mode",
-        choices=["conservative", "loose", "smoothen"],
-        default="conservative",
-        help="Choose update mode: 'conservative' (default), 'loose' or 'smoothen'.",
+        "--check-uncert-over",
+        type=float,
+        default=2.0,
+        help="Normalization cap factor passed to ValidateDatacards.py and datacard_update mode.",
     )
     parser.add_argument(
-        "--threshold",
-        type=float,
-        default=0.01,
-        help="Threshold for non-genuine shape detection (only used in loose mode).",
+        "--plot-output-dir",
+        type=str,
+        default=None,
+        help="If set, generate largeNormEff shape plots into this directory.",
     )
     parser.add_argument(
         "--updated-shifts-json",
@@ -117,31 +106,43 @@ def main():
         os.makedirs(args.output_path)
 
     datacard_paths = []
+    missing_masses = []
     for mass in args.mass:
         paths = list(Path(args.datacard_path).glob(f"datacard_cat_*_spin_*_mass_{mass}.txt"))
         if not paths:
-            print(f"No datacards found for mass {mass} in {args.datacard_path}")
+            missing_masses.append(mass)
             continue
         datacard_paths.extend(paths)
 
+    if missing_masses:
+        print(
+            f"No datacards found for {len(missing_masses)} requested masses in {args.datacard_path}: "
+            f"{missing_masses}"
+        )
+
     campaigns = sorted({re.search(r"datacard_cat_([^_]+)_", path.name).group(1) for path in datacard_paths})
     spins = sorted({re.search(r"spin_(\d+)", path.name).group(1) for path in datacard_paths})
+    matched_masses = sorted({int(re.search(r"mass_(\d+)", path.name).group(1)) for path in datacard_paths})
     print(
         f"Found {len(datacard_paths)} datacards for campaigns {campaigns}, "
-        f"spins {spins} and mass {args.mass} in {args.datacard_path}"
+        f"spins {spins} and masses {matched_masses} in {args.datacard_path}"
     )
+    if args.plot_output_dir:
+        print(f"LargeNormEff plotting: enabled, output directory: {args.plot_output_dir}")
+    else:
+        print("LargeNormEff plotting: disabled (set --plot-output-dir to enable)")
     update_stats = {}
+
     with ProcessPoolExecutor(max_workers=args.max_processes) as executor:
         future_to_datacard = {
             executor.submit(
                 process_datacard_wrapper,
                 str(path),
                 args.ignore_processes,
-                args.update_mode,
                 args.output_path,
                 args.validation_results_dir,
-                args.only_remove,
-                args.threshold,
+                args.check_uncert_over,
+                args.plot_output_dir,
             ): str(path)
             for path in datacard_paths
         }
@@ -158,21 +159,32 @@ def main():
                 print(f"[ERROR] Error while processing datacard {datacard_path}: {e}")
                 continue
 
+    #result = conservative_update(
+    #    Datacard(datacard=Path(datacard_paths[0]), ignore_processes=args.ignore_processes),
+    #    Path(args.output_path) / "conservative",
+    #    validation_results_dir=args.validation_results_dir,
+    #    check_uncert_over=args.check_uncert_over,
+    #    plot_output_dir=args.plot_output_dir,
+    #)
+
     output_json = args.updated_shifts_json
     if output_json is None:
-        output_json = str(Path(args.output_path) / f"updated_shifts_{args.update_mode}.json")
+        output_json = str(Path(args.output_path) / "updated_shifts_conservative.json")
+
+    output_stats = update_stats
 
     with open(output_json, "w") as f:
         json.dump(
             {
                 "metadata": {
                     "created_at": datetime.now().isoformat(),
-                    "update_mode": args.update_mode,
-                    "threshold": args.threshold,
-                    "only_remove": args.only_remove,
-                    "n_datacards": len(update_stats),
+                    "update_mode": "conservative",
+                    "check_uncert_over": args.check_uncert_over,
+                    "plot_output_dir": args.plot_output_dir,
+                    "n_datacards_processed": len(update_stats),
+                    "n_datacards_in_output": len(output_stats),
                 },
-                "updated_shifts": update_stats,
+                "updated_shifts": output_stats,
             },
             f,
             indent=2,
