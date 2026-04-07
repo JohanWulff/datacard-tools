@@ -159,9 +159,14 @@ def main():
                 print(f"[ERROR] Error while processing datacard {datacard_path}: {e}")
                 continue
 
+    # debug
+    #datacard = "/data/dust/user/jwulff/res_HH/datacards/final/low_val_fix/datacard_cat_2016APV_etau_boosted_notres2b_os_iso_spin_2_mass_250.txt"
+    #datacard = "/data/dust/user/jwulff/res_HH/datacards/final/low_val_fix/datacard_cat_2016APV_mutau_boosted_notres2b_os_iso_spin_2_mass_250.txt"
+    #output_path = "./debug_output"
     #result = conservative_update(
-    #    Datacard(datacard=Path(datacard_paths[0]), ignore_processes=args.ignore_processes),
-    #    Path(args.output_path) / "conservative",
+    #    Datacard(datacard=Path(datacard), ignore_processes=args.ignore_processes),
+    #    #Path(args.output_path) / "conservative",
+    #    Path(output_path),
     #    validation_results_dir=args.validation_results_dir,
     #    check_uncert_over=args.check_uncert_over,
     #    plot_output_dir=args.plot_output_dir,
