@@ -309,13 +309,13 @@ def conservative_update(
         #        n_updated_nuisances += 1
 
         if empty_yields:
-            for nuisance in datacard.get_nuisance_types():
+            for nuisance, nuisance_type in datacard.get_nuisance_types().items():
                 if nuisance in modifications:
                     modifications[nuisance][1].update({process: "-" for process in empty_yields})
                 else:
                     process_entries = datacard.get_nuisance_line(nuisance)
                     process_entries.update({process: "-" for process in empty_yields})
-                    modifications[nuisance] = ("shape", process_entries)
+                    modifications[nuisance] = (nuisance_type, process_entries)
                 n_updated_nuisances += 1
 
 
