@@ -29,6 +29,9 @@ def get_rate_string(nominal_yield, up_rate, down_rate):
         if rate_diff < 0.01 and max_rate <= 0.2:
             # if the up and down rates are within 1% of each other and the maximum rate is within 20%, we can use a symmetric lnN
             return f"{max_rate + 1:.3f}"
+        elif max_rate > 0.9:
+            # keep as shape
+            return "1"
         else:
             # large symmetric lnN's become inaccurate, so we explicitly use asym lnN
             # (see "lnN" section here:
