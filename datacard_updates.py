@@ -168,12 +168,12 @@ def replace_nuisance_lines(
             lines.pop(line_index)
             continue
         new_line = [nuisance, nuisance_type]
-        process_entries = ["-" for _ in old_card.all_processes]  # ignored processes get "-" by default
-        for process, entry in new_entries.items():
-            if process not in old_card.processes:
-                raise ValueError(f"Process {process} not found in datacard {old_card.datacard}")
-            process_entries[old_card.processes.index(process)] = entry
-        new_line.extend(process_entries)
+        # instead of putting a "-" for ignored processes, we put the original entry to avoid issues with missing shape keys in the shapes file after we remove unused shapes
+        old_entries = old_card.get_nuisance_line(nuisance, all_processes=True)
+        old_entries.update(new_entries)
+        # make sure to preserve process order when constructing the new line
+        for process, index in old_card.process_to_id_all.items():
+            new_line.append(old_entries[process])
         spaces = [old_card.positions[i + 1] - (old_card.positions[i] + len(new_line[i])) for i in range(len(new_line) - 1)]
         new_line = "".join([f"{new_line[i]}{' ' * spaces[i]}" for i in range(len(new_line) - 1)]) + f"{new_line[-1]}\n"
         lines[line_index] = new_line
