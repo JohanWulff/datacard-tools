@@ -238,19 +238,18 @@ def conservative_update(
         empty_yields = {proc for proc, yield_ in nominal_yields.items() if yield_ < 1e-4}
 
         if not small_shape_effects:
-            if not large_norm_effects:
-                if len(empty_yields) == 0:
-                    print((f"No empty nominal processes and no large/small "
-                          f"effects found for datacard {datacard.datacard.name}. No modifications applied."))
-                    output_datacard_path = Path(output_path) / datacard.datacard.name
-                    shutil.copy(datacard.datacard, output_datacard_path)
-                    output_shapes_file = Path(output_path) / datacard.shapes_file.name
-                    shutil.copy(datacard.shapes_file, output_shapes_file)
-                    return {
-                        "n_updated_nuisances": 0,
-                        "removed_shape_keys": [],
-                        "dropped_nuisances": [],
-                    }
+            if len(empty_yields) == 0:
+                print((f"No empty nominal processes and no large/small "
+                        f"effects found for datacard {datacard.datacard.name}. No modifications applied."))
+                output_datacard_path = Path(output_path) / datacard.datacard.name
+                shutil.copy(datacard.datacard, output_datacard_path)
+                output_shapes_file = Path(output_path) / datacard.shapes_file.name
+                shutil.copy(datacard.shapes_file, output_shapes_file)
+                return {
+                    "n_updated_nuisances": 0,
+                    "removed_shape_keys": [],
+                    "dropped_nuisances": [],
+                }
 
         modifications = {}
         remove_unused_shapes = set()
