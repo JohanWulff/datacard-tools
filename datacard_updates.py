@@ -113,34 +113,6 @@ def plot_variation(
     plt.close() 
 
     
-def can_remodel_as_rate(rates: tuple[float, float], nominal_yield: float, min_yield: float = 1e-4) -> bool:
-    """
-    Check if a nuisance can be safely remodeled as a rate nuisance.
-    
-    Guards:
-    1. Nominal yield must be > min_yield (default 1e-4 -> same as datacard minimum yield threshold) 
-    2. Rate factors must be within valid lnN range (0.01 to 1.99)
-    
-    Returns: True if safe to remodel, False otherwise
-    """
-    up_rate, down_rate = rates
-    
-    # commented out becuase for now we switch off all nuisances for processes with nominal yield < 1e-4, 
-    # see get_rate_string()
-    ## Guard 1: Check nominal yield
-    #if nominal_yield <= min_yield:
-    #    return False
-    
-    # Guard 2: Check if rate factors are within valid lnN range
-    max_rate = max(up_rate, down_rate)
-    
-    # keep as a shape if beyond a factor of 1.99
-    if max_rate > 1.99:
-        return False
-    
-    return True
-
-
 def get_non_genuine_shapes(datacard, threshold, shapes_file_handle=None) -> List[str]:
     """
     Get non-genuine shapes from the datacard.
