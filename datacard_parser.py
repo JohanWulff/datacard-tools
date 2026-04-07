@@ -61,6 +61,7 @@ class Datacard:
         process_ids = list(map(int, self.process_lines[1].strip().split()[1:]))
         self.processes = [p for p in self.all_processes if not any(ignored in p for ignored in self.ignore_processes)]
         self.process_to_id = {p: i for i, p in zip(process_ids, self.processes) if not any(ignored in p for ignored in self.ignore_processes)}
+        self.process_to_id_all = {p: i for i, p in zip(process_ids, self.all_processes)}
         # assumes that signal process is always the one with the lowest id
         self.signal_process = min(self.process_to_id, key=self.process_to_id.get)
         self.background_processes = [p for p in self.processes if p != self.signal_process]
@@ -139,9 +140,11 @@ class Datacard:
             with open(self.datacard, "r") as f:
                 self.lines = f.readlines()
 
-    def get_nuisance_line(self, nuisance: str) -> dict[str, str]:
+    def get_nuisance_line(self, nuisance: str, all_processes: bool = False) -> dict[str, str]:
         """
         Get the line for a given nuisance in the datacard.
+        Returns a dictionary with process names as keys and the corresponding entries as values.
+        If all_processes is False, only returns entries for processes in self.processes, otherwise returns entries for all processes in the datacard.
         """
         self._load_lines()
         nuisance_lines = [l for l in self.lines if l.startswith(f"{nuisance} ")]
@@ -152,8 +155,12 @@ class Datacard:
         # create a process to entry mapping
         entries = nuisance_lines[0].strip().split()
         entry_dict = {}
-        for process, i in self.process_to_id.items():
-            entry_dict[process] = entries[i + 2]  # +2 because first two entries are nuisance name and type
+        if all_processes:
+            for process, i in self.process_to_id_all.items():
+                entry_dict[process] = entries[i + 2]  # +2 because first two entries are nuisance name and type
+        else:
+            for process, i in self.process_to_id.items():
+                entry_dict[process] = entries[i + 2]  # +2 because first two entries are nuisance name and type
         return entry_dict
 
     def get_nuisance_types(self) -> dict[str, str]:
