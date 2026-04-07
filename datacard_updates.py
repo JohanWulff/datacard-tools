@@ -256,44 +256,31 @@ def conservative_update(
         for nuisance in small_shape_effects:
             # Check if all processes can be remodeled as rates
             rates = datacard.get_rates(nuisance, shapes_file_handle=f)
-            processes_to_remodel = set([k for k in small_shape_effects[nuisance].keys() if can_remodel_as_rate(rates[k], nominal_yields.get(k, 0))])
-            if processes_to_remodel:
-                if len(processes_to_remodel) == len(datacard.processes):
-                    rate_strings = {process: get_rate_string(nominal_yields[process], *rates[process]) for process in datacard.processes}
-                    if all(rate == "-" for rate in rate_strings.values()):
-                        dropped_nuisances.append(nuisance)
-                    # all processes can be remodeled as rates, so we remodel the entire nuisance as lnN
-                    modifications[nuisance] = ("lnN", rate_strings)
-                    # Only remove shapes if we actually remodeled the nuisance
-                    remove_unused_shapes.update({
-                        f"{datacard.dirname}/{p}_{nuisance}{ud}"
-                        for p in processes_to_remodel 
-                        for ud in ["Up", "Down"]
-                    })
-                elif len(processes_to_remodel) < len(datacard.processes):
-                    keep_processes = set(datacard.processes) - processes_to_remodel
-                    rate_strings = {process: get_rate_string(nominal_yields[process], *rates[process]) for process in processes_to_remodel}
-                    if all(rate == "-" for rate in rate_strings.values()):
-                        nuisance_type = "shape"
-                    else:
-                        # this case is more problematic, because combine only allows asym entries for lnN's
-                        # so if any of the rate strings will be asymmetric, we have to keep the nuisance as a shape, even for the processes that could be remodeled as lnN
-                        nuisance_type = "shape?"
-                        if any("/" in rate for rate in rate_strings.values()):
-                            # skip update for this nuisance and keep it as a shape
-                            continue
-                    rate_strings.update({process: "1" for process in keep_processes})
-                    modifications[nuisance] = (nuisance_type, rate_strings)
-                    # Only remove shapes if we actually remodeled the nuisance
-                    remove_unused_shapes.update({
-                        f"{datacard.dirname}/{p}_{nuisance}{ud}"
-                        for p in processes_to_remodel 
-                        for ud in ["Up", "Down"]
-                    })
-                else:
-                    raise ValueError(
-                        f"Unexpected number of processes for nuisance {nuisance} in datacard {datacard.datacard.name}"
-                    )
+            rate_strings = {process: get_rate_string(nominal_yields[process], *rates[process]) for process in datacard.processes}
+            if any(rate == "1" for rate in rate_strings.values()):
+                modifications[nuisance] = ("shape?", rate_strings)
+                # Only remove shapes if we actually remodeled some processes as lnN
+                remove_unused_shapes.update({
+                    f"{datacard.dirname}/{p}__{nuisance}{ud}"
+                    for p, rate in rate_strings.items() 
+                    if rate != "1" 
+                    for ud in ["Up", "Down"]
+                })
+            elif all(rate == "-" for rate in rate_strings.values()):
+                modifications[nuisance] = ("shape?", rate_strings)
+                remove_unused_shapes.update({
+                    f"{datacard.dirname}/{p}__{nuisance}{ud}"
+                    for p in datacard.processes
+                    for ud in ["Up", "Down"]
+                })
+                dropped_nuisances.append(nuisance)
+            else:
+                modifications[nuisance] = ("lnN", rate_strings)
+                remove_unused_shapes.update({
+                    f"{datacard.dirname}/{p}__{nuisance}{ud}"
+                    for p in datacard.processes
+                    for ud in ["Up", "Down"]
+                })
                 n_updated_nuisances += 1
         keep_keys -= remove_unused_shapes
     
