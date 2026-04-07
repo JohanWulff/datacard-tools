@@ -220,6 +220,8 @@ def conservative_update(
 
     small_shape_effects = parse_validation_section(validation_results_json, "smallShapeEff")
     large_norm_effects = parse_validation_section(validation_results_json, "largeNormEff")
+    empty_systematic_shape = parse_validation_section(validation_results_json, "emptySystematicShape")
+    uncert_template_same = parse_validation_section(validation_results_json, "uncertTemplateSame")
 
     with uproot.open(datacard.shapes_file) as f:
         cnames = f.classnames()
@@ -338,18 +340,47 @@ def conservative_update(
         else:
             shutil.copy(datacard.shapes_file, output_shapes_file)
 
-    # In conservative mode, plot largeNormEff entries to be able to cross-check later 
-    if large_norm_effects and plot_output_dir:
-        plot_dir_for_large_norm = Path(plot_output_dir) / f"spin_{datacard.spin}_mass_{datacard.mass}"
-        # Plot only largeNormEff entries that affect non-empty nominals 
+    # In conservative mode, plot largeNormEff entries to check for potential issues 
+    # if large_norm_effects and plot_output_dir:
+    #     plot_dir_for_large_norm = Path(plot_output_dir) / f"spin_{datacard.spin}_mass_{datacard.mass}"
+    #     # Plot only largeNormEff entries that affect non-empty nominals 
+    #     for nuisance in large_norm_effects:
+    #         for process in large_norm_effects[nuisance].keys():
+    #             if process in empty_yields:
+    #                 continue
+    #             if datacard.get_nuisance_types().get(nuisance) != "shape":
+    #                 continue
+    #             if large_norm_effects[nuisance][process]["value_up"] > 0.01 and large_norm_effects[nuisance][process]["value_down"] > 0.01:
+    #                 continue
+    #             plot_variation(datacard, nuisance, process, plot_dir_for_large_norm)
+
+    # create plots for empty_systematic_shape or uncert_template_same nuisances if requested
+    if plot_output_dir:
+        plot_dir = Path(plot_output_dir) / f"spin_{datacard.spin}_mass_{datacard.mass}" 
         for nuisance in large_norm_effects:
             for process in large_norm_effects[nuisance].keys():
                 if process in empty_yields:
                     continue
-                #print(
-                #    f"Plotting largeNormEff nuisance {nuisance} for process {process} in datacard {datacard.datacard.name}..."
-                #)
-                plot_variation(datacard, nuisance, process, plot_dir_for_large_norm)
+                if datacard.get_nuisance_types().get(nuisance) != "shape":
+                    continue
+                plot_variation(datacard, nuisance, process, plot_dir, binning="numbers")
+        for nuisance in empty_systematic_shape:
+            for process in empty_systematic_shape[nuisance].keys():
+                if process in empty_yields:
+                    continue
+                if datacard.get_nuisance_types().get(nuisance) != "shape":
+                    continue
+                plot_variation(datacard, nuisance, process, plot_dir, binning="numbers")
+        for nuisance in uncert_template_same:
+            for process in uncert_template_same[nuisance].keys():
+                if process in empty_yields:
+                    continue
+                if datacard.get_nuisance_types().get(nuisance) != "shape":
+                    continue
+                # check if the plot already exists
+                if os.path.exists(plot_dir / f"{datacard.dirname}__{process}__{nuisance}.pdf"):
+                    continue
+                plot_variation(datacard, nuisance, process, plot_dir, binning="numbers")
 
     return {
         "n_updated_nuisances": n_updated_nuisances, 
