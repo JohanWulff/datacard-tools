@@ -7,4 +7,5 @@ __pycache__/
 tryout_sym.py
 new_remodel_plots
 *.pdf
+*.tex
 
