@@ -62,6 +62,11 @@ class Datacard:
         self.processes = [p for p in self.all_processes if not any(ignored in p for ignored in self.ignore_processes)]
         self.process_to_id = {p: i for i, p in zip(process_ids, self.processes) if not any(ignored in p for ignored in self.ignore_processes)}
         self.process_to_id_all = {p: i for i, p in zip(process_ids, self.all_processes)}
+        # read the rate line to get the nominal yields
+        _rate_lines = [l for l in self.lines if l.startswith("rate")]
+        assert len(_rate_lines) == 1, f"Found {len(_rate_lines)} lines for rate"
+        self.nominal_yields = {p: float(y) for p, y in zip(self.all_processes, _rate_lines[0].strip().split()[1:])
+                               if not any(ignored in p for ignored in self.ignore_processes)}
         # assumes that signal process is always the one with the lowest id
         self.signal_process = min(self.process_to_id, key=self.process_to_id.get)
         self.background_processes = [p for p in self.processes if p != self.signal_process]
@@ -139,7 +144,27 @@ class Datacard:
         if self.lines is None:
             with open(self.datacard, "r") as f:
                 self.lines = f.readlines()
-
+    
+    def _get_yield(self, process: str, ignore_nonexistent_processes: bool = False, shapes_file_handle=None) -> float:
+        """
+        Get the nominal yield for a given process.
+        Optionally, pass an open shapes_file_handle to avoid reopening.
+        """
+        if process not in self.processes:
+            # for some minor sr's, some of the smaller processes (and QCD) don't exist
+            # so we want an option to return 0 instead of raising an error
+            if ignore_nonexistent_processes:
+                return 0.0
+            else:
+                raise ValueError(f"Process {process} not found in datacard {self.datacard}")
+        if shapes_file_handle is None:
+            with uproot.open(self.shapes_file) as f:
+                nominal_hist = f[self.dirname][f"{process}"].to_hist()
+                return nominal_hist.sum().value
+        else:
+            nominal_hist = shapes_file_handle[self.dirname][f"{process}"].to_hist()
+            return nominal_hist.sum().value
+    
     def get_nuisance_line(self, nuisance: str, all_processes: bool = False) -> dict[str, str]:
         """
         Get the line for a given nuisance in the datacard.
@@ -206,23 +231,46 @@ class Datacard:
                 for process in self.processes:
                     if process in self.ignore_processes:
                         continue
-                    try:
-                        nominal_hist = f[self.dirname][f"{process}"].to_hist()
-                        nominal_yields[process] = nominal_hist.sum().value
-                    except KeyError:
-                        # Process not found in shapes file
-                        nominal_yields[process] = 0.0
+                    nominal_yields[process] = self._get_yield(process,
+                                                              ignore_nonexistent_processes=True,
+                                                              shapes_file_handle=f) 
         else:
             for process in self.processes:
                 if process in self.ignore_processes:
                     continue
-                try:
-                    nominal_hist = shapes_file_handle[self.dirname][f"{process}"].to_hist()
-                    nominal_yields[process] = nominal_hist.sum().value
-                except KeyError:
-                    # Process not found in shapes file
-                    nominal_yields[process] = 0.0
+                nominal_yields[process] = self._get_yield(process,
+                                                            ignore_nonexistent_processes=True,
+                                                            shapes_file_handle=shapes_file_handle)
         return nominal_yields
+    
+    def get_signal_yield(self, shapes_file_handle=None) -> float:
+        """
+        Get the nominal yield for the signal process.
+        Optionally, pass an open shapes_file_handle to avoid reopening.
+        """
+        return self._get_yield(self.signal_process, shapes_file_handle=shapes_file_handle)
+
+    def cross_check_nominal_yields(self, shapes_file_handle=None) -> bool:
+        """
+        Cross check that the nominal yields in the datacard match the integrals of the nominal histograms in the shapes file.
+        Returns True if they match, False otherwise.
+        Optionally, pass an open shapes_file_handle to avoid reopening.
+        """
+        shapes_yields = self.get_nominal_yields(shapes_file_handle=shapes_file_handle)
+        summary = {}
+        for process in self.processes:
+            if process in self.ignore_processes:
+                continue
+            datacard_yield = float(self.nominal_yields[process])
+            shapes_yield = float(shapes_yields[process])
+            if not np.isclose(datacard_yield, shapes_yield, atol=1e-3):
+                summary[process] = (datacard_yield, shapes_yield)
+        if summary:
+            print(f"Yield mismatches found in datacard {self.datacard}:")
+            for process, (datacard_yield, shapes_yield) in summary.items():
+                print(f" Process {process}: datacard={datacard_yield}, shapes={shapes_yield}")
+            return False
+        return True
 
     def get_rates(self, nuisance: str, shapes_file_handle=None) -> dict[str, Tuple[float, float]]:
         """
